@@ -14,6 +14,18 @@
 
 An AI-powered job application framework built on [Claude Code](https://claude.com/claude-code). Fork it, fill in your profile, and let Claude evaluate job postings, tailor your CV, write cover letters, and prepare you for interviews.
 
+> [!NOTE]
+> ### 🇲🇾 Malaysia edition
+> This is a fork of [MadsLorentzen/ai-job-search](https://github.com/MadsLorentzen/ai-job-search), adapted for job-hunting in Malaysia. **Everything below is Mads's README and still applies.** The Malaysia layer is added alongside his workflow and doesn't replace it:
+>
+> - **Hiredly search:** `hiredly-search`, a new portal skill for Malaysia's graduate and professional board. Personal use only; see its `SKILL.md`.
+> - **JobStreet via email alerts:** JobStreet's `robots.txt` blocks automated search, so `/gmail-alerts` reads the saved-search alert emails JobStreet sends you (plus LinkedIn's) and adds them to the same pipeline.
+> - **Remote roles open to Malaysia (optional):** three remote-only boards, plus a check that drops "remote" jobs that are really US-only or hybrid.
+> - **RM salaries:** RM pay-text parsing, plus Malaysian location, language (BM/Mandarin) and eligibility rules.
+> - **Optional extras, all off by default:** your own Word resume edited in place, a Fit Model scorer you configure at setup, a job-history database, and `/jobs` scheduled runs with Notion and an email summary.
+>
+> **Start here:** run `python3 tools/run_pipeline.py --demo` (offline, about a second), then `/setup` → `/setup-malaysia`. Full notes: [docs/malaysia/](docs/malaysia/README.md). **Tracking:** merges upstream monthly ([routine](docs/malaysia/UPSTREAM-SYNC.md)). Maintained by [@dkchiang96](https://github.com/dkchiang96).
+
 > Note: This is an independent open-source project and is not affiliated with, endorsed by, sponsored by, or maintained by Anthropic. Anthropic and Claude Code are referenced only to describe the toolchain this workflow uses.
 >
 > This project has **no affiliated cryptocurrency, token, or paid sponsorship program**. Anything claiming otherwise is unauthorized and should be treated as a scam. The only ways to support the project are the Ko-fi link below and contributing on GitHub.
