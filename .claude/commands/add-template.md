@@ -1,6 +1,10 @@
 # /add-template - Register a Custom CV or Cover Letter Template
 
-You are helping the user register their own CV or cover letter template with the AI Job Search framework — LaTeX, Typst, or any other toolchain that compiles to PDF from the command line. The framework ships with moderncv (banking style) for CVs and a custom `cover.cls` for cover letters. This command lets the user swap in their own template: store the template files, capture usage instructions (source extension, compile command, fonts, style rules, page limits), verify the template compiles, and wire it into the `/apply` workflow so every future application uses it.
+You are helping the user register their own CV or cover letter template with the AI Job Search framework — LaTeX, Typst, `.docx`, or any other toolchain that compiles to PDF from the command line. The framework ships with moderncv (banking style) for CVs and a custom `cover.cls` for cover letters. This command lets the user swap in their own template: store the template files, capture usage instructions (source extension, compile command, fonts, style rules, page limits), verify the template compiles, and wire it into the `/apply` workflow so every future application uses it.
+
+**`.docx` is a distinct authoring model, not just another toolchain.** Every other supported source type (LaTeX, Typst) is filled by Claude **writing fresh source text** into a placeholder skeleton each time. A `.docx` template is filled the opposite way — **editing the existing document's XML in place**, so its formatting can never drift, per `.claude/skills/job-application-assistant/10-docx-editing.md`. This command still stores, verifies, and activates a `.docx` template through the same five steps below; only Step 2's compile command and Step 3's editing-method note differ. Read `10-docx-editing.md` before registering a `.docx` template.
+
+**This is the mechanism behind the "use my own resume design" choice offered during `/setup`.** A user who wants their own format uploads a real `.docx` (placed in `documents/cv/`), and this command registers it — see `10-docx-editing.md`'s "`/add-template` integration notes" for the exact per-step deltas.
 
 `$ARGUMENTS` may contain a subcommand, a file path, or nothing.
 
@@ -58,11 +62,13 @@ Ask the user (skip anything already answered by `$ARGUMENTS`):
 
 1. **Type:** Is this a **CV** template or a **cover letter** template?
 2. **Source:** Where is the template? Accept any of:
-   - A path or @-mention of a source file in any toolchain (`.tex` plus optional `.cls`/`.sty`, `.typ` plus optional local packages, or another compile-to-PDF format)
-   - Pasted template content
+   - A path or @-mention of a source file in any toolchain (`.tex` plus optional `.cls`/`.sty`, `.typ` plus optional local packages, a real `.docx`, or another compile-to-PDF format)
+   - Pasted template content (not applicable to `.docx` — a real binary file is required, see below)
    - A directory containing the template and its assets (class/package files, fonts, images)
 
 Read every provided file. If the template references an include the declared toolchain doesn't ship by default — a custom `.cls`/`.sty` not part of standard TeX distributions, a Typst package imported via a local `#import`, or an equivalent for another toolchain — confirm the user has the file and ask for it if missing — the template cannot compile without it.
+
+**`.docx` source specifically:** verify it is a real Word binary before doing anything else — `unzip -l <file>.docx | grep -q "word/document.xml"`. A markdown or plain-text file merely renamed to `.docx` will fail this check; stop and ask for the real file rather than guessing at its structure. This is also the moment to ask whether a matching cover-letter template should be built by cloning this same document (see `10-docx-editing.md`) — the natural default when registering a CV template and no cover-letter template is active yet.
 
 ---
 
@@ -77,6 +83,7 @@ Collect:
 3. **Compile command** - the full command `/apply` and Step 4's test compile will run, using `<file>` (no extension) as the placeholder for the output basename:
    - **`.tex` source**: infer the engine the same way as before - if the source uses `fontspec` or loads font files by path, it requires `xelatex` or `lualatex`; tell the user this rather than letting them pick `pdflatex`. Render as `rm -f <file>.pdf && mkdir -p build && lualatex -interaction=nonstopmode -output-directory=build <file>.tex && mv build/<file>.pdf ./` (or the appropriate engine).
    - **`.typ` source**: default to `typst compile <file>.typ <file>.pdf` - Typst has a single binary, no engine choice.
+   - **`.docx` source**: check which converter the machine actually has, in this order, and record whichever is found (do not assume — verify): (a) Microsoft Word — `powershell -File tools/docx_to_pdf.ps1 <file>.docx <file>.pdf`; (b) LibreOffice — `soffice --headless --convert-to pdf --outdir <dir> <file>.docx`. If neither is available, stop and tell the user the `.docx` track needs one of the two installed to produce a verifiable PDF. Record the platform requirement in the manifest. Full editing method (fill by editing the XML in place, not by generating fresh text): `.claude/skills/job-application-assistant/10-docx-editing.md`.
    - **Anything else**: no built-in guidance; ask the user for the exact compile command.
 
    **Build directory rule:** if the toolchain can redirect its intermediate files, the declared command sends them to a `build/` folder beside the source, and still leaves the PDF next to the source, where `/apply` reads it. For LaTeX, use `-output-directory=build`. It also moves the PDF, hence the `mv`. TeX Live does not create the directory, hence the `mkdir -p`. A failed compile skips the `mv`, hence the leading `rm -f`, so a failed LaTeX compile never leaves a stale PDF where `/apply` inspects it. After a failed compile, read the log in `build/`. If Step 4 fails only because of the redirect (e.g. `\include` from a subfolder), drop the redirect but keep the leading `rm -f`, and record why under "Known pitfalls". If the toolchain writes nothing but the PDF (`typst compile`) or has no redirect option, keep the command as it is - never block registration on this rule.
@@ -98,7 +105,7 @@ Create the template folder:
 
 Write into it:
 
-1. **`template<source-extension>`** (e.g. `template.tex`, `template.typ`) - the template skeleton. Replace all personal data in the source with `[PLACEHOLDER]` tokens (`[YOUR_NAME]`, `[YOUR_EMAIL]`, `[YOUR_PHONE]`, `[YOUR_LINKEDIN_URL]`, ...) so the template is shareable and profile-agnostic. Keep the structure, preamble, and styling exactly as provided.
+1. **`template<source-extension>`** (e.g. `template.tex`, `template.typ`, `template.docx`) - the template skeleton. Replace all personal data in the source with `[PLACEHOLDER]` tokens (`[YOUR_NAME]`, `[YOUR_EMAIL]`, `[YOUR_PHONE]`, `[YOUR_LINKEDIN_URL]`, ...) so the template is shareable and profile-agnostic. Keep the structure, preamble, and styling exactly as provided. **For `.docx`: do this placeholder substitution via the XML-in-place method in `10-docx-editing.md`, never by re-saving through a library that re-renders styles.** The user's own real, non-placeholder content (their actual CV body) is never stored here — it stays in `documents/cv/*.docx`, which is already gitignored; this stored skeleton is the shareable structural reference other users see.
 2. **Class/style/package files** - copy any companion files (`.cls`/`.sty` for LaTeX, local Typst packages, or equivalents) alongside the skeleton.
 3. **`fonts/`** - copy bundled font files here, preserving any directory layout the toolchain's font-loading mechanism expects (LaTeX `\fontspec` `Path`, Typst font path, ...). Adjust those path values in the skeleton to be relative to the template folder.
 4. **`TEMPLATE.md`** - the manifest. Use exactly this format:
@@ -107,15 +114,17 @@ Write into it:
 # Template: <name>
 
 - **Type:** CV | Cover letter
-- **Source extension:** .tex | .typ | ...
-- **Engine/toolchain:** lualatex | xelatex | pdflatex | typst | <other> (display label only)
+- **Source extension:** .tex | .typ | .docx | ...
+- **Engine/toolchain:** lualatex | xelatex | pdflatex | typst | Microsoft Word (COM) | LibreOffice (soffice) | <other> (display label only)
+- **Editing method:** generate-from-scratch (LaTeX/Typst - Claude writes fresh source text into the skeleton each time) | edit-in-place (.docx - Claude edits the existing document's XML per `10-docx-editing.md`, never regenerates it)
 - **Page limit:** <N> page(s)
 - **Fonts:** <main font> (<bundled in fonts/ | system font - must be installed>)
 - **Class/packages:** <documentclass/imports and any non-standard packages, or "standard">
+- **Platform requirement (`.docx` only):** <e.g. "Microsoft Word must be installed" or "LibreOffice (soffice) must be on PATH">
 
 ## Compile command
 
-    cd <output dir> && <the full declared command, e.g. rm -f <file>.pdf && mkdir -p build && lualatex -interaction=nonstopmode -output-directory=build <file>.tex && mv build/<file>.pdf ./ or typst compile <file>.typ <file>.pdf>
+    cd <output dir> && <the full declared command, e.g. rm -f <file>.pdf && mkdir -p build && lualatex -interaction=nonstopmode -output-directory=build <file>.tex && mv build/<file>.pdf ./ or typst compile <file>.typ <file>.pdf or powershell -File tools/docx_to_pdf.ps1 <file>.docx <file>.pdf>
 
 ## Style rules
 
@@ -140,6 +149,7 @@ Never register a template without a successful test compile. Templates that "loo
    ```
 3. If the compile fails: show the user the relevant error lines, diagnose (missing font file, wrong engine/command, missing class or package), fix what you can (e.g. font path values), and re-compile. If the fix needs input only the user has (a missing font file, a license-restricted class), ask for it and wait.
 4. On success, confirm a PDF was produced and Read it to check the layout renders sensibly (no overlapping text, fonts loaded, page count matches the declared page limit for the dummy content). Record any surprises in the manifest's "Known pitfalls".
+   **`.docx` additionally:** run the verification loop in `10-docx-editing.md` (page-2 integrity, widow-line, page-fill checks), not just the page count. A template that passes the page count alone can still fail these.
 5. Delete the scratch source file, the scratch PDF, any `build/` folder a test compile created, and any other `_compile_test.*` byproduct left in the template folder.
 
 Do not proceed to Step 5 until the test compile passes.
