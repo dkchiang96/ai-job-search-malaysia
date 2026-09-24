@@ -37,7 +37,9 @@ def _fetch(url, ua):
     r = subprocess.run(
         ['curl', '-sS', '-L', '--max-redirs', '5', '--max-time', '12', '-A', ua,
          '-H', 'Accept: text/plain,*/*', '-w', '\n%{http_code}', '--', url],
-        capture_output=True, text=True, timeout=20)
+        # encoding pinned: text=True alone decodes with the locale code page, which
+        # on Windows (cp1252) crashes on any robots.txt carrying a non-Latin byte.
+        capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=20)
     if r.returncode != 0:
         raise RuntimeError('curl exit %d' % r.returncode)
     body, _, code = r.stdout.rpartition('\n')
