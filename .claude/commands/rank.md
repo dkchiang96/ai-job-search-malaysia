@@ -20,6 +20,17 @@ Follow these steps **in order**.
 
 `--limit` bounds the expensive fetch-and-score work; `--top` only bounds how many scored jobs appear in the shortlist. They are independent: jobs beyond `--limit` are deferred, not silently discarded.
 
+### Scorer: default, or the optional Fit Model (Malaysia adaptation)
+
+If `config/fit_model.json` exists (written by `/setup-malaysia`), this run uses the **Fit Model** unless the arguments say `--scorer default`. Nothing else in this command changes. Only these four points differ:
+
+- **Step 1:** also run `python3 tools/fit_model.py rubric` and paste its output into every scoring agent's prompt, together with the usual rubric.
+- **Step 2:** each agent's JSON object carries `"fit_inputs": {...}` (the facts the rubric lists) **instead of** `"scores"`. The agent reports facts only and never computes a score. Every other field (`status`, the gates, `deadline`, `strengths`, `gaps`) is unchanged.
+- **Step 3:** skip rules 1-2. The tool computes the score and verdict (`Apply - high priority`, `Apply`, `Apply if direction matters`, `Skip`) from `config/fit_model.json`. Rules 3-7 apply unchanged.
+- **Step 4:** write back with `python3 tools/fit_model.py apply --results "<file>"` instead of `rank_state.py apply`. The output is the same shape (`ranked`, `vetoed`, `expired`, `errors`). A job stopped by a hard gate (location, domain, salary floor, employer rating, experience) is listed under `vetoed` with `gate_failed` and `gate_reason`; show it under **Excluded** with that reason. In Step 5, add `CS / DV / WP` next to each shortlisted score. For a job with `priority_signal: true`, say it is worth the portal's limited "top choice" / priority-application slot.
+
+The method, and why an agent reports facts rather than scores, is in `docs/malaysia/FIT-MODEL.md`.
+
 ---
 
 ## Step 1: Load State
@@ -37,6 +48,7 @@ If it reports no candidates, say so ("Nothing new to rank - run /scrape to find 
 Then read the scoring framework and profile **once**:
 - `.claude/skills/job-application-assistant/04-job-evaluation.md`
 - `.claude/skills/job-application-assistant/01-candidate-profile.md`
+- `.claude/skills/job-application-assistant/12-malaysia-market.md` - only when `config/malaysia.json` exists (Malaysia adaptation: remote-work gate, RM salary and language conventions)
 
 State how many jobs will be ranked and how many are deferred before proceeding.
 
@@ -49,6 +61,12 @@ Dispatch parallel `general-purpose` agents via the **Agent tool**, ~5 jobs per a
 - Pass each agent everything it needs **inline in the prompt** - the job list (title, company, URL) and a compact scoring rubric extracted from the files you read in Step 1: the strong/moderate/weak skill match areas, direct/adjacent experience domains, behavioral thrive/drain factors, career goals, deal-breakers, and the location constraints. Do **not** make agents re-read the profile files.
 - Agents fetch each posting URL with WebFetch and score **only from actually fetched content**. If a URL is dead, redirects to a listing page, or the posting has expired, the agent marks that job `expired` - it never scores from the title alone and never fabricates posting content.
 - **Before marking anything `expired`, the agent must exhaust the escalation order** in `.claude/skills/job-application-assistant/09-web-research.md`: a `WebFetch` 403 is a rejected *client*, not a missing page, and retrying with browser headers via curl recovers most corporate and bank domains. A stored URL ending in a `#fragment` points at a listing page rather than a posting, so the agent should search the employer's own careers site for the role by name before writing the job off. Include this instruction in every scoring agent's prompt. `expired` means "retrieval genuinely failed after retrying", not "the first fetch was unhelpful".
+- **Email-alert entries (`source: "email-alert"`, added by `/gmail-alerts`) - Malaysia adaptation.** Their stored `url` is a portal tracking link. For `portal: "jobstreet-alert"` it resolves to `my.jobstreet.com/job/...`, which JobStreet's `robots.txt` disallows for every agent: **never fetch it, follow it, or call any JobStreet endpoint instead.** Find the same role elsewhere, in this order, and score from the first real posting found:
+  1. For `linkedin-alert`, run `linkedin-search detail <numeric id from the url>`.
+  2. `hiredly-search search -q "<title>"` (add `-l <state>` from the stored `location`) and take a result whose `company` matches.
+  3. One `WebSearch` for `"<company>" "<title>"`. Take the employer's own careers page or ATS board (Greenhouse, Lever, Ashby, Workday, SuccessFactors) or another board's copy. Gate each candidate URL through `python3 tools/robots_check.py '<url>'` before `WebFetch`.
+
+  This is the one exception to "no web searches" below, and it is capped at one search per job. It locates the posting; it is not research. If nothing is found, the job is **neither scored nor `expired`**. Rule 1 still holds, and an unreachable copy is not a closed job. The agent leaves it out of its JSON and reports its key as `not_found`. After Step 4, park those keys with `python3 tools/gmail_imap_fetch.py set-unverified --keys "<k1>,<k2>"` so later runs don't re-search them, and list them in Step 5 under **"Posting not found online (alert email only)"** with their alert link for the user to open.
 - Scope is triage: posting text vs. rubric. **No company research, no salary lookup, no web searches** - that depth belongs to `/apply`.
 
 Each agent returns a JSON array, one object per job:
