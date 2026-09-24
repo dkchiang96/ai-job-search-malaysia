@@ -118,3 +118,20 @@ company_research/*.json
 
 # Brainstorm mockups (superpowers visual companion) - never ship
 .superpowers/
+
+# --- Malaysia adaptation (docs/malaysia/) -------------------------------------
+# Gmail alert state + credentials (tools/gmail_imap_fetch.py): processed message
+# UIDs, last-run date, the IMAP app password in gmail_alerts/.env.
+gmail_alerts/
+# Optional SQLite history mirror (tools/job_store.py) - every job you've seen.
+**/job_scraper/jobs.db
+**/job_scraper/jobs.db-*
+# Offline demo output (tools/run_pipeline.py --demo) - regenerated every run.
+**/job_scraper/.demo/
+# Personal scoring config (tools/fit_model.py): salary floor/target, locations,
+# direction goals. Only config/*.example.json is tracked.
+config/*.json
+!config/*.example.json
+# Automation pack state: Notion API sync map, scheduled-run logs.
+**/job_scraper/notion_api_sync.json
+logs/

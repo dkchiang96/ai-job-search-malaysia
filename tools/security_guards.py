@@ -49,12 +49,36 @@ ALLOWED_PERMISSIONS = {
     "Bash(bun run .agents/skills/jobnet-search/cli/src/cli.ts:*)",
     "Bash(bun run .agents/skills/linkedin-search/cli/src/cli.ts:*)",
     "Bash(bun run .agents/skills/freehire-search/cli/src/cli.ts:*)",
+    # Malaysia fork: Hiredly (MY board) + the three remote-only boards.
+    "Bash(bun run .agents/skills/hiredly-search/cli/src/cli.ts:*)",
+    "Bash(bun run .agents/skills/remoteok-search/cli/src/cli.ts:*)",
+    "Bash(bun run .agents/skills/weworkremotely-search/cli/src/cli.ts:*)",
+    "Bash(bun run .agents/skills/workingnomads-search/cli/src/cli.ts:*)",
     "Bash(python salary_lookup.py:*)",
     "Bash(python3 salary_lookup.py:*)",
     "Bash(python tools/rank_state.py:*)",
     "Bash(python3 tools/rank_state.py:*)",
+    # Malaysia fork: optional Fit Model scorer for /rank.
+    "Bash(python tools/fit_model.py:*)",
+    "Bash(python3 tools/fit_model.py:*)",
     "Bash(python tools/job_key.py:*)",
     "Bash(python3 tools/job_key.py:*)",
+    # Malaysia fork: monthly portal-rules health check (a few robots.txt/status probes).
+    "Bash(python tools/malaysia_health.py:*)",
+    "Bash(python3 tools/malaysia_health.py:*)",
+    # Malaysia fork: the offline demo (writes only job_scraper/.demo/).
+    "Bash(python tools/run_pipeline.py:*)",
+    "Bash(python3 tools/run_pipeline.py:*)",
+    # Malaysia fork: optional history mirror and headless Notion sync.
+    "Bash(python tools/job_store.py:*)",
+    "Bash(python3 tools/job_store.py:*)",
+    "Bash(python tools/notion_sync_api.py:*)",
+    "Bash(python3 tools/notion_sync_api.py:*)",
+    # Malaysia fork: Gmail alert importer (read-only IMAP) and the MYR salary parser.
+    "Bash(python tools/gmail_imap_fetch.py:*)",
+    "Bash(python3 tools/gmail_imap_fetch.py:*)",
+    "Bash(python tools/myr_salary.py:*)",
+    "Bash(python3 tools/myr_salary.py:*)",
     "Bash(python tools/verify_pdf.py:*)",
     "Bash(python3 tools/verify_pdf.py:*)",
     "Bash(python tools/verify_layout.py:*)",
@@ -110,6 +134,15 @@ REQUIRED_IGNORE_RULES = [
     # from commands, not a skill, so a plain rooted rule is correct here -
     # unlike the **/-prefixed job_scraper/upskill rules above.
     "company_research/*.json",
+    # Malaysia adaptation: inbox state/credentials, the SQLite history mirror,
+    # demo output, the personal scoring config, automation-pack state.
+    "gmail_alerts/",
+    "**/job_scraper/jobs.db",
+    "**/job_scraper/jobs.db-*",
+    "**/job_scraper/.demo/",
+    "config/*.json",
+    "**/job_scraper/notion_api_sync.json",
+    "logs/",
 ]
 
 # Negation (re-include) rules the template legitimately ships. .gitignore is
@@ -124,6 +157,8 @@ ALLOWED_IGNORE_NEGATIONS = {
     "!cv/main_example.tex",
     "!cover_letters/cover_example.tex",
     "!documents/**/.gitkeep",
+    # Malaysia adaptation: the example scoring config is a template, not personal data.
+    "!config/*.example.json",
 }
 
 # Hook commands the template legitimately ships, as "<Event>:<command>" strings.
