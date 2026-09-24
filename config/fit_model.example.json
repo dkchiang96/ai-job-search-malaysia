@@ -1,0 +1,105 @@
+{
+  "_comment": "Example Fit Model config for a mid-career candidate in the Klang Valley. /setup-malaysia writes your own to config/fit_model.json (gitignored). Every value here is a placeholder - replace them with yours. fx_to_myr: YOUR OWN exchange rates for remote roles paid in other currencies - update them yourself; the code never ships a rate.",
+  "version": 1,
+  "gates": {
+    "experience_years": 6,
+    "experience_overshoot_max": 4,
+    "domain_exclusions": [
+      "cold-calling sales quotas",
+      "night-shift production supervision"
+    ],
+    "domain_exclusion_max_pct": 40,
+    "glassdoor_min": 2.5
+  },
+  "candidacy": {
+    "weights": {
+      "requirements": 0.4,
+      "domain": 0.25,
+      "experience": 0.2,
+      "keywords": 0.15
+    },
+    "domain_tiers": {
+      "100": [
+        "e-commerce",
+        "logistics",
+        "fintech"
+      ],
+      "70": [
+        "retail",
+        "B2B SaaS",
+        "FMCG"
+      ],
+      "40": [
+        "oil and gas",
+        "healthcare",
+        "government"
+      ]
+    },
+    "employer_access": {
+      "startup_or_sme": 1.1,
+      "mid_size_company": 1.0,
+      "large_corporate_or_mnc": 0.85,
+      "government_linked_company": 0.85,
+      "big4_or_top_consulting": 0.7,
+      "recruitment_agency_confidential": 1.0
+    },
+    "applicant_penalty": {
+      "threshold": 600,
+      "minus": 0.1
+    }
+  },
+  "direction": {
+    "goals": [
+      {
+        "id": "growth",
+        "label": "Next-level scope",
+        "weight": 0.4,
+        "question": "Does the role add scope, seniority or a team compared with my current level?"
+      },
+      {
+        "id": "skills",
+        "label": "Skills I want to build",
+        "weight": 0.35,
+        "question": "Does the role make me use data analytics and automation tools day to day?"
+      },
+      {
+        "id": "stability",
+        "label": "Stability",
+        "weight": 0.25,
+        "question": "Is the employer established and the role permanent (not a short contract)?"
+      }
+    ],
+    "required_goal": null,
+    "cap_if_required_zero": 55
+  },
+  "worth": {
+    "weights": {
+      "direction": 0.65,
+      "location": 0.35
+    },
+    "location_scores": {
+      "Kuala Lumpur": 100,
+      "Selangor": 95,
+      "Remote (open to Malaysia)": 100,
+      "Penang": 60,
+      "Singapore": 70
+    },
+    "salary_myr_month": {
+      "floor": 6000,
+      "current": 8000,
+      "target": 10000,
+      "no_data": 0.9,
+      "paycut_needs_direction": 70
+    },
+    "fx_to_myr": {
+      "USD": 4.2,
+      "SGD": 3.3
+    }
+  },
+  "verdict_bands": {
+    "apply_high": 70,
+    "apply": 55,
+    "apply_if_direction": 40,
+    "direction_threshold": 60
+  }
+}

@@ -88,3 +88,56 @@ Only include jobs posted within the last 14 days, or with an application deadlin
 
 If the user specifies a focus area, select queries from the matching category and also generate 2-3 custom queries for that focus. For example:
 - "/scrape [focus_area]" -> relevant category queries + custom focus-specific queries
+
+## Malaysia (Malaysia adaptation - filled by `/setup-malaysia`)
+
+<!-- SETUP: /setup-malaysia replaces the [MY_*] tokens below. Delete this section if you are not job-hunting in Malaysia. -->
+
+**Where Malaysian jobs come from in this fork** (full access table: `docs/malaysia/PORTALS.md`):
+
+| Source | How `/scrape` reaches it |
+|---|---|
+| Hiredly | `hiredly-search` CLI. Search by **state + category**; keywords are filtered client-side. Queries below. |
+| JobStreet | **Not searchable** (robots.txt). Saved-search **email alerts** instead, via `/gmail-alerts`. Your alert list lives in `docs/malaysia/JOB-ALERTS.md`'s worksheet, not here. |
+| LinkedIn | `linkedin-search` CLI with a Malaysian location, plus optional alert emails via `/gmail-alerts`. |
+| freehire | `freehire-search --country MY` (tech-leaning aggregator). |
+| MYFutureJobs, Maukerja, Glints | Login-walled or search-disallowed. Check them by hand, or add their alert emails later. |
+
+**Hiredly searches** (state + category; `-q` narrows within the fetched pages):
+
+```
+hiredly-search search -l [MY_STATE_1] -c [MY_HIREDLY_CATEGORY_1] --jobage 14 --pages 2
+hiredly-search search -l [MY_STATE_1] -c [MY_HIREDLY_CATEGORY_2] -q "[MY_KEYWORD]" --jobage 14 --pages 3
+hiredly-search search -l [MY_STATE_2] -c [MY_HIREDLY_CATEGORY_1] --jobage 14
+```
+
+**LinkedIn searches** (always pass a full Malaysian location):
+
+```
+linkedin-search search -q "[YOUR_PRIMARY_JOB_TITLE_1]" -l "Kuala Lumpur, Federal Territory of Kuala Lumpur, Malaysia" --jobage 14
+linkedin-search search -q "[YOUR_PRIMARY_JOB_TITLE_1]" -l "Selangor, Malaysia" --jobage 14
+```
+
+**Location tiers** (Klang Valley = KL + most of Selangor + Putrajaya; see `12-malaysia-market.md`):
+- Ideal: [MY_IDEAL_AREAS]
+- Acceptable: [MY_ACCEPTABLE_AREAS]
+- Only with a strong reason: [MY_STRETCH_AREAS]   (e.g. Penang, Johor Bahru, Singapore)
+
+## Remote roles open to Malaysia (optional - only if you opted in at `/setup-malaysia`)
+
+<!-- SETUP: /setup-malaysia keeps this section and enables the remote boards only if you choose "also remote". -->
+
+Every remote result goes through `12-malaysia-market.md`'s **Remote-Work
+Verification Gate**. A remote tag is where checking starts, not a verdict.
+
+```
+remoteok-search search -q "[MY_REMOTE_KEYWORD]" --limit 20
+weworkremotely-search search -q "[MY_REMOTE_KEYWORD]" --limit 20
+workingnomads-search search -q "[MY_REMOTE_KEYWORD]" --limit 20
+freehire-search search -q "[MY_REMOTE_KEYWORD]" --remote remote --jobage 14
+linkedin-search search -q "[YOUR_PRIMARY_JOB_TITLE_1]" -l "Malaysia" --remote remote --jobage 14
+```
+
+Check each board's own `SKILL.md` for its exact flags, since the remote boards
+differ. Remote pay is usually USD. Set your conversion rate in
+`config/fit_model.json` → `worth.fx_to_myr` if you use the Fit Model.

@@ -418,6 +418,11 @@ Present a summary:
 > private), so do not push these commits to a fork. Keep them local, or push to a private
 > repository instead - see SETUP.md section 8 for the private-remote setup.
 >
+> **Job-hunting in Malaysia?** Run `/setup-malaysia` next. It sets your states,
+> asks whether you also want **remote roles open to Malaysia**, connects
+> JobStreet/LinkedIn email alerts, records your salary numbers in RM, and lets
+> you use your own Word resume. (Malaysia adaptation, see docs/malaysia/.)
+>
 > **Try it out:**
 > - Run `/scrape` to search for matching jobs right now
 > - Run `/apply` with a job posting URL to see the full application workflow

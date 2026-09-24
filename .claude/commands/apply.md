@@ -35,6 +35,7 @@ This rule is the input side of the Step 3 Factual Grounding Audit, not a competi
 Read the evaluation framework:
 - `.claude/skills/job-application-assistant/04-job-evaluation.md`
 - `.claude/skills/job-application-assistant/01-candidate-profile.md`
+- `.claude/skills/job-application-assistant/12-malaysia-market.md` - only when `config/malaysia.json` exists (Malaysia adaptation: remote-work gate, RM salary, language and eligibility wording)
 
 Using the framework from `04-job-evaluation.md`, evaluate the job posting against the candidate's profile. If the salary lookup tool is configured, run:
 
@@ -84,7 +85,9 @@ Read only the reference files you do not yet have:
 - `.claude/skills/job-application-assistant/05-cv-templates.md`
 - `.claude/skills/job-application-assistant/06-cover-letter-templates.md`
 
-**Resolve the active template (do this once, reuse everywhere below):** if `05-cv-templates.md` or `06-cover-letter-templates.md` opens with an `ACTIVE-TEMPLATE` managed block (inserted by `/add-template`), read its declared **source extension** and **compile command** — these override the stock `.tex`/lualatex (CV) and `.tex`/xelatex (cover letter) defaults for the rest of this workflow. Call these `<CV_EXT>`/`<CV_COMPILE>` and `<COVER_EXT>`/`<COVER_COMPILE>`; where no block is present, they default to `.tex`, the stock lualatex command, and the stock xelatex command respectively. Every `.tex` reference below is really `<CV_EXT>` or `<COVER_EXT>` — stock behavior is unchanged, this only matters when a custom template is active.
+**Resolve the active template (do this once, reuse everywhere below):** if `05-cv-templates.md` or `06-cover-letter-templates.md` opens with an `ACTIVE-TEMPLATE` managed block (inserted by `/add-template`), read its declared **source extension**, **editing method**, and **compile command** — these override the stock `.tex`/lualatex (CV) and `.tex`/xelatex (cover letter) defaults for the rest of this workflow. Call these `<CV_EXT>`/`<CV_METHOD>`/`<CV_COMPILE>` and `<COVER_EXT>`/`<COVER_METHOD>`/`<COVER_COMPILE>`; where no block is present, they default to `.tex`, `generate-from-scratch`, the stock lualatex command, and the stock xelatex command respectively. Every `.tex` reference below is really `<CV_EXT>` or `<COVER_EXT>` — stock behavior is unchanged, this only matters when a custom template is active.
+
+**`<CV_METHOD>` / `<COVER_METHOD>` branches the drafting mechanism, not just the compile command.** `generate-from-scratch` (LaTeX/Typst) means write fresh source text following the template's structure, as documented below. `edit-in-place` (`.docx`) means the opposite: copy the user's real base document from `documents/cv/` and edit its existing XML runs per `.claude/skills/job-application-assistant/10-docx-editing.md` — never write a new document from scratch, and never use `python-docx` or any library that re-renders styles. When `<CV_METHOD>` is `edit-in-place`, treat the tailoring guidance in `05-cv-templates.md` (profile-statement angles, fact boundaries, page-discipline rules) as *what* to change; `10-docx-editing.md` governs *how* to physically change it.
 
 Also read the most recent existing CV and cover letter files for concrete structural reference (one of each is enough):
 - Read any existing `cv/main_*<CV_EXT>` file as a structural reference
@@ -240,6 +243,7 @@ cd ../cover_letters && xelatex -interaction=nonstopmode cover_<company>_<role>.t
 - **Stock CV** uses **lualatex** — pdflatex fails on modern MiKTeX with fontawesome5 font-expansion errors. lualatex handles the same sources cleanly.
 - **Stock cover letter** uses **xelatex** — cover.cls requires fontspec.
 - **Custom template active:** run its declared `<CV_COMPILE>`/`<COVER_COMPILE>` command instead, substituting the actual filename for `<file>`. Never fall back to lualatex/xelatex when a custom template's compile command is a different toolchain (e.g. `typst compile`) — that command is what the manifest actually verified in `/add-template` Step 4.
+- **`<CV_METHOD>`/`<COVER_METHOD>` is `edit-in-place` (`.docx`):** the compile command is a PDF conversion (`tools/docx_to_pdf.ps1` or `soffice`), not a build — see `.claude/skills/job-application-assistant/10-docx-editing.md`. Present both the resulting `.docx` and `.pdf` in Step 6's "Files Created"; the `.docx` is the actual editable output, the `.pdf` is the verification artifact.
 
 If either compile fails, fix the error and re-compile until clean.
 
@@ -271,11 +275,13 @@ Then read both PDFs via the Read tool and verify:
 - [ ] No orphaned `\cventry` titles — a job/education title line must never sit alone at the bottom of page 1 with its bullets on page 2. This is the most common failure.
 - [ ] Section headings are not isolated at the top of page 2 with only 1-2 lines below
 - [ ] No awkward whitespace gaps
+- [ ] **`.docx` (edit-in-place) CVs only:** the page-2 integrity, widow-line and page-fill checks in `10-docx-editing.md` pass (no role straddles the page break, no wrapped bullet ends on 1-2 words, page 2 isn't shipped half-empty)
 
 **Cover letter (`cover_letters/cover_<company>_<role>.pdf`):**
 - [ ] Exactly 1 page
 - [ ] Signature block visible, not cut off or pushed to a second page
 - [ ] Bullet list font matches surrounding body text (both should be Raleway-Medium)
+- [ ] No wrapped line ends on 1-2 words (same widow-line check as the CV)
 
 ### 5c. Iterate until clean
 
