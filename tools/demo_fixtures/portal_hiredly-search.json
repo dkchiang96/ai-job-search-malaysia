@@ -1,0 +1,11 @@
+{"meta": {"count": 3, "page": 1, "note": "recorded hiredly-search output shape; companies and jobs are invented"},
+ "results": [
+  {"id": "jobs-malaysia-contoh-logistik-job-operations-manager", "title": "Operations Manager", "company": "Contoh Logistik Sdn Bhd",
+   "location": "Shah Alam, Selangor", "date": "2026-09-20", "url": "https://example.invalid/hiredly/operations-manager",
+   "salary": "RM 9,000 - RM 12,000 / month"},
+  {"id": "jobs-malaysia-kilang-contoh-job-bpi-lead", "title": "Business Process Improvement Lead", "company": "Kilang Contoh Group",
+   "location": "Kuala Lumpur", "date": "2026-09-19", "url": "https://example.invalid/hiredly/bpi-lead", "salary": null},
+  {"id": "jobs-malaysia-kedai-runcit-job-cs-exec", "title": "Customer Service Executive (Mandarin Speaker)", "company": "Kedai Runcit Enterprise",
+   "location": "Cheras, Kuala Lumpur", "date": "2026-09-18", "url": "https://example.invalid/hiredly/cs-exec",
+   "salary": "RM 2,800 - RM 3,500 / month"}
+ ]}

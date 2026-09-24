@@ -1,0 +1,7 @@
+{"meta": {"count": 2, "page": 1, "note": "recorded remoteok-search output shape; companies and jobs are invented"},
+ "results": [
+  {"id": "900001", "title": "Remote Operations Manager", "company": "Remote Contoh Inc.", "location": "Worldwide",
+   "date": "2026-09-22", "url": "https://example.invalid/remoteok/900001", "salary": "USD 4,000 - 5,500 per month"},
+  {"id": "900002", "title": "Head of Support Operations", "company": "US Contoh LLC", "location": "United States",
+   "date": "2026-09-21", "url": "https://example.invalid/remoteok/900002", "salary": "USD 90,000 - 110,000 per year"}
+ ]}

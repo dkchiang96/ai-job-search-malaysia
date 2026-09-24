@@ -1,0 +1,397 @@
+{
+  "_comment": "What a /rank scoring agent would REPORT for each invented job (facts, not scores) for the demo candidate in config/fit_model.example.json: ~6 years in operations, e-commerce/logistics, English + Bahasa Malaysia, Klang Valley. tools/fit_model.py does every calculation. Keyed by 'company|title'.",
+  "Contoh Logistik Sdn Bhd|Operations Manager": {
+    "location_verdict": "PASS",
+    "language_gate": "PASS",
+    "strengths": [
+      "Runs last-mile and warehouse ops - direct match",
+      "Asks for SOP and KPI dashboard ownership"
+    ],
+    "gaps": [
+      "Wants WMS migration experience - adjacent only"
+    ],
+    "fit_inputs": {
+      "location_category": "Selangor",
+      "domain_exclusion_pct": 0,
+      "glassdoor": 3.7,
+      "required_years": 5,
+      "requirements": [
+        {
+          "req": "5+ yrs operations",
+          "must": true,
+          "score": 1
+        },
+        {
+          "req": "KPI dashboards",
+          "must": true,
+          "score": 1
+        },
+        {
+          "req": "WMS migration",
+          "must": false,
+          "score": 0.5
+        },
+        {
+          "req": "team of 20+",
+          "must": true,
+          "score": 0.5
+        }
+      ],
+      "domain_tier": 100,
+      "keyword_coverage_pct": 80,
+      "employer_type": "mid_size_company",
+      "direction": {
+        "growth": 100,
+        "skills": 50,
+        "stability": 100
+      }
+    }
+  },
+  "Kilang Contoh Group|Business Process Improvement Lead": {
+    "location_verdict": "PASS",
+    "language_gate": "PASS",
+    "strengths": [
+      "Process mapping and automation brief"
+    ],
+    "gaps": [
+      "Manufacturing context is new",
+      "Lean Six Sigma certification preferred"
+    ],
+    "fit_inputs": {
+      "location_category": "Kuala Lumpur",
+      "domain_exclusion_pct": 10,
+      "glassdoor": null,
+      "required_years": 7,
+      "requirements": [
+        {
+          "req": "process improvement",
+          "must": true,
+          "score": 1
+        },
+        {
+          "req": "Lean Six Sigma",
+          "must": false,
+          "score": 0
+        },
+        {
+          "req": "manufacturing",
+          "must": true,
+          "score": 0
+        }
+      ],
+      "domain_tier": 40,
+      "keyword_coverage_pct": 55,
+      "employer_type": "large_corporate_or_mnc",
+      "direction": {
+        "growth": 50,
+        "skills": 100,
+        "stability": 100
+      }
+    }
+  },
+  "Kedai Runcit Enterprise|Customer Service Executive (Mandarin Speaker)": {
+    "location_verdict": "PASS",
+    "language_gate": "FAIL",
+    "language_note": "Title and requirements: 'Mandarin Speaker' - Mandarin is not in the candidate's Languages table",
+    "strengths": [],
+    "gaps": [
+      "Requires Mandarin",
+      "Entry-level pay"
+    ],
+    "fit_inputs": {
+      "location_category": "Kuala Lumpur",
+      "domain_exclusion_pct": 0,
+      "glassdoor": null,
+      "required_years": 1,
+      "requirements": [
+        {
+          "req": "Mandarin",
+          "must": true,
+          "score": 0
+        }
+      ],
+      "domain_tier": 70,
+      "keyword_coverage_pct": 30,
+      "employer_type": "startup_or_sme",
+      "direction": {
+        "growth": 0,
+        "skills": 0,
+        "stability": 50
+      }
+    }
+  },
+  "Contoh Neo Sdn Bhd|Head of Operations": {
+    "location_verdict": "PASS",
+    "language_gate": "PASS",
+    "strengths": [
+      "Head-of role at a fintech - a clear step up"
+    ],
+    "gaps": [
+      "Penang-based, hybrid 3 days",
+      "Asks for 8+ years"
+    ],
+    "fit_inputs": {
+      "location_category": "Penang",
+      "domain_exclusion_pct": 0,
+      "glassdoor": 4.1,
+      "required_years": 8,
+      "requirements": [
+        {
+          "req": "8+ yrs ops leadership",
+          "must": true,
+          "score": 0.5
+        },
+        {
+          "req": "fintech",
+          "must": true,
+          "score": 1
+        },
+        {
+          "req": "regulatory reporting",
+          "must": false,
+          "score": 0
+        }
+      ],
+      "domain_tier": 100,
+      "keyword_coverage_pct": 70,
+      "employer_type": "startup_or_sme",
+      "direction": {
+        "growth": 100,
+        "skills": 50,
+        "stability": 0
+      }
+    }
+  },
+  "Kilang Contoh Group|Automation Program Lead": {
+    "location_verdict": "PASS",
+    "language_gate": "PASS",
+    "strengths": [
+      "Owns the workflow-automation roadmap",
+      "Reporting to the COO"
+    ],
+    "gaps": [
+      "Low-code tooling named but not used before"
+    ],
+    "fit_inputs": {
+      "location_category": "Kuala Lumpur",
+      "domain_exclusion_pct": 0,
+      "glassdoor": 3.4,
+      "required_years": 6,
+      "requirements": [
+        {
+          "req": "process automation",
+          "must": true,
+          "score": 1
+        },
+        {
+          "req": "stakeholder management",
+          "must": true,
+          "score": 1
+        },
+        {
+          "req": "Power Automate / n8n",
+          "must": false,
+          "score": 0.5
+        }
+      ],
+      "domain_tier": 70,
+      "keyword_coverage_pct": 75,
+      "employer_type": "large_corporate_or_mnc",
+      "direction": {
+        "growth": 50,
+        "skills": 100,
+        "stability": 100
+      }
+    }
+  },
+  "Remote Contoh Inc.|Remote Operations Manager": {
+    "location_verdict": "PASS",
+    "location_note": "'Hiring worldwide, async-first' - Remote-Work Verification Gate PASS",
+    "language_gate": "PASS",
+    "strengths": [
+      "Genuinely worldwide remote, async",
+      "Paid in USD"
+    ],
+    "gaps": [
+      "Contractor via EOR - no employer EPF",
+      "4h overlap with US Eastern"
+    ],
+    "fit_inputs": {
+      "location_category": "Remote (open to Malaysia)",
+      "domain_exclusion_pct": 0,
+      "glassdoor": null,
+      "required_years": 5,
+      "requirements": [
+        {
+          "req": "remote ops",
+          "must": true,
+          "score": 0.5
+        },
+        {
+          "req": "e-commerce ops",
+          "must": true,
+          "score": 1
+        },
+        {
+          "req": "overlap 9am-1pm US Eastern",
+          "must": true,
+          "score": 0
+        }
+      ],
+      "domain_tier": 100,
+      "keyword_coverage_pct": 50,
+      "employer_type": "startup_or_sme",
+      "direction": {
+        "growth": 50,
+        "skills": 100,
+        "stability": 0
+      }
+    }
+  },
+  "US Contoh LLC|Head of Support Operations": {
+    "location_verdict": "FAIL",
+    "location_note": "Remote-Work Verification Gate FAIL (geography-restricted): 'must be authorized to work in the United States'",
+    "language_gate": "PASS",
+    "strengths": [],
+    "gaps": [
+      "US work authorization required"
+    ],
+    "fit_inputs": {
+      "location_category": "Remote (open to Malaysia)",
+      "domain_exclusion_pct": 0,
+      "glassdoor": 3.9,
+      "required_years": 6,
+      "requirements": [
+        {
+          "req": "support ops",
+          "must": true,
+          "score": 0.5
+        }
+      ],
+      "domain_tier": 70,
+      "keyword_coverage_pct": 50,
+      "employer_type": "mid_size_company",
+      "direction": {
+        "growth": 50,
+        "skills": 50,
+        "stability": 50
+      }
+    }
+  },
+  "Kedai Online Sdn Bhd|Head of Fulfilment Operations": {
+    "location_verdict": "PASS",
+    "language_gate": "PASS",
+    "found_on": "employer careers page (JobStreet page never fetched)",
+    "strengths": [
+      "E-commerce fulfilment - core domain",
+      "Builds the team from scratch"
+    ],
+    "gaps": [
+      "Peak-season 24/7 on-call"
+    ],
+    "fit_inputs": {
+      "location_category": "Selangor",
+      "domain_exclusion_pct": 15,
+      "glassdoor": 3.2,
+      "required_years": 7,
+      "requirements": [
+        {
+          "req": "fulfilment ops",
+          "must": true,
+          "score": 1
+        },
+        {
+          "req": "team building",
+          "must": true,
+          "score": 1
+        },
+        {
+          "req": "3PL contract management",
+          "must": true,
+          "score": 0.5
+        }
+      ],
+      "domain_tier": 100,
+      "keyword_coverage_pct": 70,
+      "employer_type": "startup_or_sme",
+      "direction": {
+        "growth": 100,
+        "skills": 50,
+        "stability": 50
+      }
+    }
+  },
+  "Contoh Pay Sdn Bhd|Operations Excellence Lead": {
+    "location_verdict": "PASS",
+    "language_gate": "PASS",
+    "found_on": "hiredly-search mirror of the JobStreet alert",
+    "strengths": [
+      "Fintech ops excellence, SQL-heavy"
+    ],
+    "gaps": [
+      "Payments regulation knowledge preferred"
+    ],
+    "fit_inputs": {
+      "location_category": "Kuala Lumpur",
+      "domain_exclusion_pct": 0,
+      "glassdoor": 2.3,
+      "required_years": 6,
+      "requirements": [
+        {
+          "req": "ops excellence",
+          "must": true,
+          "score": 1
+        }
+      ],
+      "domain_tier": 100,
+      "keyword_coverage_pct": 70,
+      "employer_type": "mid_size_company",
+      "direction": {
+        "growth": 50,
+        "skills": 100,
+        "stability": 50
+      }
+    }
+  },
+  "Syarikat Contoh Bhd|Regional Operations Manager": {
+    "not_found": true,
+    "_why": "Email-alert job whose posting could not be found on the employer site, Hiredly, LinkedIn or a WebSearch - parked as unverified, never scored from the title"
+  },
+  "Remote Contoh Inc.|Business Operations Manager (Remote)": {
+    "location_verdict": "FLAG",
+    "location_note": "Silent on hiring countries - check the careers page before applying",
+    "language_gate": "PASS",
+    "strengths": [
+      "Remote, ops generalist"
+    ],
+    "gaps": [
+      "Eligibility unverified"
+    ],
+    "fit_inputs": {
+      "location_category": "Remote (open to Malaysia)",
+      "domain_exclusion_pct": 0,
+      "glassdoor": null,
+      "required_years": 4,
+      "requirements": [
+        {
+          "req": "business ops",
+          "must": true,
+          "score": 1
+        },
+        {
+          "req": "SaaS",
+          "must": false,
+          "score": 0.5
+        }
+      ],
+      "domain_tier": 70,
+      "keyword_coverage_pct": 60,
+      "employer_type": "startup_or_sme",
+      "direction": {
+        "growth": 50,
+        "skills": 50,
+        "stability": 0
+      }
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{"meta": {"count": 2, "page": 1, "note": "recorded linkedin-search output shape; companies and jobs are invented"},
+ "results": [
+  {"id": "4000000104", "title": "Head of Operations", "company": "Contoh Neo Sdn Bhd", "location": "George Town, Penang, Malaysia",
+   "date": "2026-09-21", "url": "https://my.linkedin.com/jobs/view/4000000104"},
+  {"id": "4000000102", "title": "Automation Program Lead", "company": "Kilang Contoh Group", "location": "Kuala Lumpur, Malaysia",
+   "date": "2026-09-22", "url": "https://my.linkedin.com/jobs/view/4000000102"}
+ ]}
