@@ -14,6 +14,10 @@
   powershell -ExecutionPolicy Bypass -File tools\register_jobs_task.ps1 -Days Monday,Wednesday,Friday -At 07:30
 
 .NOTES
+  Before registering: open this repo in Claude Code once, interactively, and
+  accept the "trust this folder" prompt - an untrusted folder's
+  .claude/settings.json permissions are ignored in headless runs.
+
   Registered without -User/-Password, which means "run only when user is
   logged on". claude needs your interactive credential store. Remove it with:
     Unregister-ScheduledTask -TaskName "AI Job Search - jobs" -Confirm:$false

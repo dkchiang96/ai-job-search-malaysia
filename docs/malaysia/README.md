@@ -48,13 +48,19 @@ all invented data, with no network and no credentials.
 
 ## Getting started for real
 
-1. Fork this repo **privately** (see Mads's README warning: `/setup` writes
-   your personal data into tracked files). Clone it and install
-   [Claude Code](https://claude.com/claude-code), Python 3.10+ and
-   [Bun](https://bun.sh).
-2. In Claude Code: `/setup`, then `/setup-malaysia`.
-3. `/scrape` → `/gmail-alerts` → `/rank`, or just `/jobs`.
-4. Pick a job and run `/apply <url>`. Applying stays manual. Nothing in this
+1. Copy this repo into a **private** repository. A GitHub fork of a public
+   repo is always public, and `/setup` writes your personal data into tracked
+   files. Mads's [SETUP.md section 8](../../SETUP.md#8-pulling-upstream-updates-into-your-fork)
+   has the two-minute recipe. Install [Claude Code](https://claude.com/claude-code),
+   Python 3.10+ and [Bun](https://bun.sh).
+2. **Open the folder in Claude Code once, interactively, and accept the
+   "trust this folder" prompt.** Until you do, Claude Code ignores the repo's
+   pre-approved commands (`.claude/settings.json`). You'd get a permission
+   prompt for every search, and a headless or scheduled run would be denied
+   them.
+3. In Claude Code: `/setup`, then `/setup-malaysia`.
+4. `/scrape` → `/gmail-alerts` → `/rank`, or just `/jobs`.
+5. Pick a job and run `/apply <url>`. Applying stays manual. Nothing in this
    fork submits an application or messages an employer.
 
 ## Honest scoping (what Mads's index asks every fork to state)

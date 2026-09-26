@@ -55,7 +55,9 @@ python3 tools/notion_sync_api.py sync --since <RUN_DATE>
 ```
 
 with a Bash timeout of at least 180000 ms. `--since` keeps the sync bounded to
-this run's rankings. Without the token, skip silently. Interactive users can
+this run's rankings. Without the token, skip silently. The token should point
+at a **database created for this sync**: its first run adds any columns it
+needs (Key, Score, CS/DV/WP, ...) to whatever database it is given. Interactive users can
 still run upstream's `/notion-sync` (Notion MCP) at any time.
 
 ## Step 6: Deterministic Summary
@@ -94,8 +96,16 @@ wait for it.
 ## Scheduled mode (`--scheduled`)
 
 Used by `tools/run_jobs_scheduled.ps1` (Windows Task Scheduler), which starts a
-headless `claude -p` session. In this mode:
+headless `claude -p` session. Before scheduling anything, open the repo in
+Claude Code once interactively and accept the "trust this folder" prompt;
+otherwise the repo's `.claude/settings.json` permissions are ignored. The
+wrapper also passes its own `--allowedTools` list. In this mode:
 
+- **Run every command exactly as the steps write it, from the repo root.** No
+  `cd "<path>" &&` prefix and no absolute paths (`python3 tools/x.py ...`,
+  `bun run .agents/skills/...`). The pre-approved permissions match the
+  literal command, so a prefixed command is denied, and nobody is there to
+  approve it. Pass the same rule to every subagent you dispatch.
 - **Never ask a question or wait for input.** Nobody is there to answer.
   Where a command would ask, take its documented default.
 - **Run everything synchronously.** Never background a command or leave a
