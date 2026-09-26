@@ -8,8 +8,10 @@ every run. If a portal redesigns its alert email, fix the parser here and the
 anchor description in that doc together.
 
 Validation status: the JobStreet and LinkedIn parsers were built against real
-Malaysian alert digests (JobStreet: 8 digests on 2026-08-22, re-checked against
-14 more on 2026-09-10; LinkedIn: 5 digests on 2026-08-22). The Indeed parser was
+Malaysian alert digests and re-checked on 2026-09-26 against every alert from
+the previous 7 days (JobStreet: 64 digests, 774 listings; LinkedIn: 21 digests,
+120 listings; none malformed). That check drove the card-based JobStreet
+rewrite below. The Indeed parser was
 built against 6 real digests on 2026-08-22 and has **not been maintained** since
 (see email-alert-portals.md). The unit tests use synthetic text shaped like
 those samples, so they prove the parsing logic, not that a portal's layout is
@@ -23,7 +25,18 @@ import re
 
 
 _JOBSTREET_FOOTER_RE = re.compile(
-    r"^(View all matching jobs|Download Jobstreet App|Edit this alert|Unsubscribe from this alert)$",
+    r"^(View all matching jobs|Download Jobstreet App|Edit this alert|Unsubscribe from this alert"
+    r"|Rate your recent employer|Was this email useful\??)$",
+    re.IGNORECASE,
+)
+# Card decorations JobStreet added to alert digests (seen on real digests
+# 2026-09-26): up to three "* <benefit>" highlight bullets after the salary,
+# and a recency line ("Recently posted") before the tracking link. Neither is
+# a field, and before this they desynced the parser into storing bullets as jobs.
+_JOBSTREET_BULLET_RE = re.compile(r"^[*•]\s+")
+_JOBSTREET_RECENCY_RE = re.compile(
+    r"^(recently posted|new|posted (today|yesterday|on\b.*|\d+\+?\s*(minute|hour|day)s?\s+ago)"
+    r"|\d+\+?\s*(minute|hour|day)s?\s+ago)$",
     re.IGNORECASE,
 )
 _JOBSTREET_PROMO_CTA_RE = re.compile(r"^Take your next career step$", re.IGNORECASE)
@@ -67,26 +80,67 @@ def _strip_jobstreet_chrome(lines: list[str]) -> list[str]:
     return out
 
 
-def parse_jobstreet(body: str) -> list[dict]:
-    """Line-based, not blank-line-block-based: a blank line appears BOTH
-    between company and location (within one listing) AND between listings,
-    so naive blank-line splitting cannot tell them apart. Walk lines in a
-    fixed sequence instead: [logo]? title / company / (blank) / [Posted on
-    <date> or badge, (blank)]? / location / [salary]? / (blank)? / tracking
-    link.
+_JOBSTREET_PRE_LOCATION_RE = re.compile(r"(strong applicant|salary match)$|^posted on\b", re.IGNORECASE)
+_JOBSTREET_GREETING_RE = re.compile(r"^(hi|hello|dear)\b|saved search|new jobs? for\b|^here are\b", re.IGNORECASE)
+_JOBSTREET_SALARY_RE = re.compile(r"\bRM\s?[\d,.]+|per month", re.IGNORECASE)
 
-    Confirmed against real mailbox digests 2026-09-10: both the badge line
-    and the "Posted on <date>" line (the "Jobs you may have missed" section's
-    per-listing date) sit AFTER the company/location blank, not before it as
-    an earlier version of this parser assumed - and a blank often separates
-    the last field from the tracking link too. Every attempt to open a
-    listing at a given line is self-resyncing: on failure (no URL found), it
-    advances by exactly one line and retries from there, rather than
-    aborting the whole block - this is what lets it skip the free-form
-    greeting preamble ("Hi <name>, based on your saved search...") that
-    precedes the first real listing without needing to pattern-match that
-    boilerplate text directly."""
-    raw_lines = [ln.strip() for ln in body.splitlines()]
+
+def _link(line: str) -> str | None:
+    if line.startswith("[") and line.endswith("]") and "://" in line:
+        return line[1:-1].strip()
+    if re.match(r"^https?://\S+$", line):
+        return line
+    return None
+
+
+def _jobstreet_card(card: list[str], url: str) -> dict | None:
+    """One listing card = the non-blank lines since the previous link.
+
+    Fields are read by position, decorations by pattern:
+      title, company, [badge | "Posted on <date>"]*, location,
+      then anything: salary (the first RM line), "Profile salary match",
+      "* benefit" bullets (which can wrap onto a second line),
+      "Recently posted".
+    Only title/company/location depend on position; everything after the
+    location is ignored unless it is the salary, so a new decoration line
+    JobStreet adds later cannot shift a field."""
+    if not card or re.match(r"^logo\b", card[-1], re.IGNORECASE):
+        return None  # a logo line's own tracking link, not a listing
+    while card and (_JOBSTREET_GREETING_RE.search(card[0]) or re.match(r"^logo$", card[0], re.IGNORECASE)):
+        card = card[1:]  # the digest's greeting preamble, or a logo without its own link
+    if len(card) < 2:
+        return None  # promo copy, CTA lines
+    title, company, rest = card[0], card[1], card[2:]
+    if _JOBSTREET_BULLET_RE.match(title) or _JOBSTREET_BULLET_RE.match(company):
+        return None
+    location = salary = None
+    for ln in rest:
+        if location is None:
+            if _JOBSTREET_PRE_LOCATION_RE.search(ln) or _JOBSTREET_RECENCY_RE.match(ln):
+                continue
+            location = ln
+        elif salary is None and _JOBSTREET_SALARY_RE.search(ln) and not _JOBSTREET_BULLET_RE.match(ln):
+            salary = ln
+    if location is not None and (_JOBSTREET_SALARY_RE.search(location) or _JOBSTREET_BULLET_RE.match(location)):
+        return None  # a card missing its location line: never shift the salary into it
+    return {"title": title, "company": company, "location": location, "salary": salary, "url": url}
+
+
+def parse_jobstreet(body: str) -> list[dict]:
+    """Card-based: every listing ends with its own tracking link, so the lines
+    between two links are exactly one card (or a logo, promo line or the
+    greeting, which _jobstreet_card rejects). This replaced an earlier
+    line-sequence walker that assumed a fixed field order after the location;
+    JobStreet's 2026-09 layout added benefit bullets (some wrapping onto two
+    lines), "Profile salary match" and "Recently posted" lines, and that walker
+    stored those bullets as job titles. Re-checked against 64 real digests
+    (7 days, 2026-09-19..26).
+
+    The chrome pass still runs first: the footer ends parsing, and the
+    "Take your next career step" promo is skipped up to the optional "Jobs you
+    may have missed" section, whose listings are kept."""
+    # JobStreet puts a no-break space between "RM" and the figure.
+    raw_lines = [ln.replace("\u00a0", " ").strip() for ln in body.splitlines()]
     # collapse repeated blank lines to single markers, drop leading/trailing blanks
     lines = []
     for ln in raw_lines:
@@ -99,73 +153,17 @@ def parse_jobstreet(body: str) -> list[dict]:
         lines.pop()
     lines = _strip_jobstreet_chrome(lines)
 
-    n = len(lines)
-    listings = []
-    i = 0
-    while i < n:
-        if lines[i] == "":
-            i += 1
+    listings, card = [], []
+    for ln in lines:
+        url = _link(ln)
+        if url is None:
+            if ln:
+                card.append(ln)
             continue
-        if re.match(r"^logo\b", lines[i], re.IGNORECASE):
-            i += 1
-            # the logo's own tracking link immediately follows - discard it too
-            if i < n and (lines[i].startswith("[") or re.match(r"^https?://", lines[i])):
-                i += 1
-            continue
-
-        j = i
-        title = lines[j]
-        j += 1
-        if j >= n or lines[j] == "":
-            i += 1  # no adjacent company line - not a real listing start, resync
-            continue
-        company = lines[j]
-        j += 1
-
-        if j < n and lines[j] == "":
-            j += 1  # the company/location separator blank
-
-        if j < n and lines[j] != "" and (
-            re.search(r"strong applicant", lines[j], re.IGNORECASE) or re.match(r"^Posted on\b", lines[j], re.IGNORECASE)
-        ):
-            j += 1  # skip badge or "Posted on <date>" decoration
-            if j < n and lines[j] == "":
-                j += 1  # blank after the decoration line, if present
-
-        location = lines[j] if j < n else None
-        j += 1
-
-        salary = None
-        if j < n and (re.search(r"\bRM\s?[\d,.]+", lines[j]) or re.search(r"per month", lines[j], re.IGNORECASE)):
-            salary = lines[j]
-            j += 1
-
-        if j < n and lines[j] == "":
-            j += 1  # blank before the tracking link
-
-        url = None
-        if j < n:
-            ln = lines[j]
-            if ln.startswith("[") and ln.endswith("]"):
-                url = ln[1:-1].strip()
-                j += 1
-            elif re.match(r"^https?://", ln):
-                url = ln
-                j += 1
-
-        # a stray "logo" line landing in a field (not caught by the top-of-loop
-        # skip, e.g. when the greeting preamble's wrapped sentence lines get
-        # mistaken for title/company) means this attempt latched onto noise,
-        # not a real listing - reject it even though title/company/url all matched
-        if title and company and url and not any(
-            v and re.match(r"^logo\b", v, re.IGNORECASE) for v in (title, company, location)
-        ):
-            listings.append({"title": title, "company": company, "location": location, "salary": salary, "url": url})
-            i = j
-            if i < n and lines[i] == "":
-                i += 1  # consume the blank separator before the next listing
-        else:
-            i += 1  # not a real listing block - resync by one line and retry
+        listing = _jobstreet_card(card, url)
+        card = []
+        if listing and not any(re.match(r"^logo\b", v or "", re.IGNORECASE) for v in listing.values()):
+            listings.append(listing)
     return listings
 
 
@@ -315,5 +313,5 @@ def alert_name_from_subject(portal: str, subject: str | None) -> str | None:
     for pattern in _SUBJECT_ALERT_PATTERNS.get(portal, []):
         m = pattern.match(subject)
         if m:
-            return m.group("name").strip().strip('"')
+            return m.group("name").strip()
     return None

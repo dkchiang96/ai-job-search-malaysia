@@ -31,25 +31,33 @@ Scrub your name and email from any sample before sharing it in an issue.
   which is where the importer's `alert_name` comes from. Recommendation digest:
   `"<Job title> [Strong applicant] + <N> new jobs - Job Alert from Jobstreet.com"`
   (no alert name).
-- **Listing anchor** (checked against 8 real digests 2026-08-22 and 14 more
-  2026-09-10). Each listing is, in order:
-  1. an optional `logo` line followed by its own tracking link (discard both)
-  2. **title**
-  3. **company**
-  4. a blank line
-  5. optionally a `Posted on <D Mon YYYY>` line or a `Strong applicant` badge,
-     each optionally followed by a blank line
-  6. **location** (`<Area>, <State>`)
-  7. an optional **salary** line (`RM X – RM Y per month`)
-  8. an optional blank line
-  9. the listing's **tracking link** in `[brackets]`
+- **Listing anchor** (layout as of 2026-09; re-checked against all 64 JobStreet
+  digests from 2026-09-19 to 26: 774 listings, none malformed). **Every card ends
+  with its own tracking link in `[brackets]`**, so the parser splits on links and
+  reads each card by position:
+  1. **title**
+  2. **company**
+  3. zero or more of: a badge (`Strong applicant`, `Very strong applicant`) or
+     `Posted on <D Mon YYYY>`
+  4. **location** (`<Area>, <State>`, sometimes `Kuala Lumpur (Remote)`)
+  5. then, in any order, all optional: the **salary** (`RM X – RM Y per month`,
+     with a no-break space after `RM`), `Profile salary match`, up to three
+     `* <benefit>` bullets (a long bullet **wraps onto a second line**), and
+     `Recently posted`
 
-  A greeting precedes the first listing. A `Take your next career step` promo
-  block (CTA, sentence, `Explore now`, each with a link) sits between the main
-  listings and an optional `Jobs you may have missed` section (heading plus a
-  `Matches your preference...` subheading). Keep that section's listings; they
-  are real. The footer starts at `View all matching jobs`, and parsing stops
-  there.
+  Only title, company and location depend on position. After the location,
+  only the first `RM` line is used, so a decoration JobStreet adds later can't
+  shift a field. A `logo` line comes with its own link (a card of just `logo`,
+  which is skipped). A greeting precedes the first listing. A `Take your next career step` promo
+  block sits between the main listings and an optional `Jobs you may have
+  missed` section (heading plus a `Matches your preference...` subheading).
+  Keep that section's listings; they are real. The footer starts at
+  `Rate your recent employer`, `Was this email useful?` (followed by `Yes`/`No`
+  links) or `View all matching jobs`, and parsing stops there.
+  *History:* before 2026-09 the cards had no bullets, badge or recency lines, and
+  the old fixed-sequence parser stored the new bullets and `Yes`/`No` links as
+  job titles. A card-based parser is the fix: expect JobStreet to keep
+  adding decoration lines.
 - **Quirks:**
   - Links are per-recipient tracking redirects (`url.jobstreet.com/ss/c/...`)
     that land on `my.jobstreet.com/job/...`. That path is **robots-disallowed**

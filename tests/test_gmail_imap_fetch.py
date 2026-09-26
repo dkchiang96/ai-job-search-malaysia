@@ -66,6 +66,13 @@ class TestMessageParsing(unittest.TestCase):
         self.assertTrue(all(x["portal"] == "jobstreet" for x in listings))
         # The greeting, promo block and footer never become listings.
         self.assertFalse(any("career advice" in (x["title"] + x["company"]) for x in listings))
+        # 2026-09 layout: benefit bullets, "Recently posted" and the Yes/No feedback
+        # footer are decorations, never titles, companies or locations.
+        for x in listings:
+            for field in (x["title"], x["company"], x["location"] or ""):
+                self.assertFalse(field.startswith("*") or field in ("Yes", "No", "Recently posted"), field)
+        self.assertEqual(listings[0]["salary"], "RM 9,000 – RM 12,000 per month")
+        self.assertEqual(listings[0]["url"], "https://url.jobstreet.com/ss/c/u001.demo-0001")
 
     def test_linkedin_header_is_not_read_as_a_listing(self):
         listings = parse_linkedin((FIXTURES / "linkedin_digest.txt").read_text(encoding="utf-8"))
@@ -80,6 +87,9 @@ class TestMessageParsing(unittest.TestCase):
         self.assertIsNone(alert_name_from_subject("jobstreet", "Ops Lead [Strong applicant] + 5 new jobs - Job Alert"))
         self.assertEqual(alert_name_from_subject("linkedin", "Your job alert for operations manager"), "operations manager")
         self.assertIsNone(alert_name_from_subject("jobstreet", None))
+        # quoted boolean searches keep their quotes intact (a real saved-search shape)
+        self.assertEqual(alert_name_from_subject("jobstreet", '12 new jobs for "COO" OR "Chief Operating Officer" in Kuala Lumpur'),
+                         '"COO" OR "Chief Operating Officer" in Kuala Lumpur')
 
 
 class TestStorage(unittest.TestCase):
