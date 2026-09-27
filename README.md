@@ -36,9 +36,6 @@ An AI-powered job application framework built on [Claude Code](https://claude.co
 | **JobStreet** | Your JobStreet alert emails, read by `/gmail-alerts` | on once Gmail is connected | `robots.txt` blocks its job pages and names AI crawlers, so nothing searches JobStreet. You get what your saved searches send, **10 alerts at most**, and the emails carry no job description, so `/rank` looks for the employer's own posting and parks the job as "unverified" if there isn't one. |
 | **Indeed** | Your Indeed alert emails, read by `/gmail-alerts` | on once Gmail is connected | Indeed's Terms ban bots and AI agents, and its search refuses scripts. Same limits as JobStreet, and Indeed fills in **estimated salaries** without saying which, so every Indeed salary is tagged "may be estimated" and never used to rule a job out. |
 | **Remote OK, We Work Remotely, Working Nomads** | Three remote-only board skills (new) | off; `/setup-malaysia` asks | Remote roles only. Every "remote" job must pass a check that drops ones that are really US-only or hybrid, and flags awkward time-zone overlap. Remote OK asks for a link back if you publish its listings. |
-| **Maukerja, Glints** | Not automated | - | `robots.txt` blocks their search. Check them yourself. |
-| **MYFutureJobs** | Not automated | - | Every job needs a login, and a script won't log in for you. |
-| **Jora** | - | - | Closed in Malaysia. |
 
 The full reasoning, with each site's rules quoted, is in [PORTALS.md](docs/malaysia/PORTALS.md).
 

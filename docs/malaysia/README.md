@@ -8,8 +8,7 @@ of places it touches his files are listed in
 [UPSTREAM-SYNC.md](UPSTREAM-SYNC.md#files-this-fork-changes).
 
 **In one paragraph:** Malaysia's largest job board, JobStreet, blocks automated
-search in `robots.txt`, and so do Maukerja and Glints. Indeed's Terms ban AI
-agents, MYFutureJobs needs a login, and Jora Malaysia has closed. So this fork
+search in `robots.txt`, and Indeed's Terms ban AI agents. So this fork
 adds a search skill for **Hiredly** (the board that can be reached properly),
 keeps Mads's **LinkedIn** and **freehire** skills, and reads **JobStreet's and
 Indeed's own alert emails** from your Gmail instead of scraping them (optional,
