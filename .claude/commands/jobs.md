@@ -39,7 +39,7 @@ failure.
 Unless `--skip-rank`: follow `.claude/commands/rank.md` Steps 1-4 with
 `--limit <N>`. That includes its scorer choice (the Fit Model if
 `config/fit_model.json` exists) and its email-alert rule (never fetch a
-JobStreet page). Skip rank.md's closing question.
+JobStreet or Indeed page). Skip rank.md's closing question.
 
 ## Step 4: History Mirror (only if you opted in)
 
@@ -122,7 +122,7 @@ wrapper also passes its own `--allowedTools` list. In this mode:
 1. **Discovery only.** `/jobs` never runs `/apply`, never drafts a document,
    never sends a message to anyone, never submits an application.
 2. **Each step's own rules still apply**: robots.txt gating, never fabricating
-   a listing, never fetching a JobStreet job page, credentials never in
+   a listing, never fetching a JobStreet or Indeed job page, credentials never in
    context.
 3. **Optional parts stay optional.** History, Notion and email run only when
    their setup exists. Their absence is reported, never treated as an error.

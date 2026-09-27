@@ -1,16 +1,22 @@
-# JobStreet and LinkedIn alerts → your pipeline
+# JobStreet, Indeed and LinkedIn alerts → your pipeline
 
-JobStreet doesn't allow automated search (see [PORTALS.md](PORTALS.md)), but it
-will email you new jobs that match a search you've saved. `/gmail-alerts`
-reads those emails from your Gmail and adds each job to the same list
-`/scrape` builds, so `/rank` and `/apply` treat them like any other job.
-LinkedIn alerts work the same way.
+JobStreet and Indeed don't allow automated search (see [PORTALS.md](PORTALS.md)),
+but both will email you new jobs that match a search you've saved.
+`/gmail-alerts` reads those emails from your Gmail and adds each job to the same
+list `/scrape` builds, so `/rank` and `/apply` treat them like any other job.
+LinkedIn alerts work the same way. They add jobs that LinkedIn's own
+recommendations surface and a keyword search misses.
 
-Setup takes about 20 minutes, once.
+Setup takes about 20 minutes, once. **Uneasy about connecting your email?**
+Read [Privacy: what reads your email, and the alternatives](#privacy-what-reads-your-email-and-the-alternatives)
+first. You can use a separate Gmail just for job alerts, or skip this part
+entirely.
 
 ---
 
-## Part 1: Plan your 10 JobStreet searches
+## Part 1: Plan your saved searches
+
+### JobStreet (10 at most)
 
 **JobStreet allows at most 10 saved-search alerts per account**, so each slot
 matters. The lessons behind this worksheet came from running it on a real
@@ -49,36 +55,58 @@ with its filters, then use the save / job-alert option on the results page and
 choose **daily** email. Nothing in this repo does this for you. It's your
 account, and it's a one-time step.
 
+### Indeed
+
+On `malaysia.indeed.com`, run a search (what + where), then use **Get new jobs
+for this search by email**. Indeed doesn't impose JobStreet's tight cap, but the
+same rules apply: exact titles, a city rather than "Remote" unless you want
+remote-only, and cut alerts that never produce a shortlisted job.
+
+- **Indeed shows its own salary estimate** when a posting has none, and the
+  email doesn't mark which figures are estimates. Every Indeed salary is
+  therefore stored tagged "(Indeed: may be estimated)". You still see it, and
+  it's benchmarked separately, but it never rules a job out.
+- **"Sponsored" jobs** in the email are kept. They're real postings an employer
+  paid to promote.
+
+### LinkedIn
+
+On LinkedIn Jobs, run a search and switch on **Set alert**. Daily, again.
+
 ## Part 2: Gmail filters and labels
 
 In Gmail: **Settings → See all settings → Filters and Blocked Addresses →
-Create a new filter.** Create these three (the third only if you use LinkedIn
-alerts). For each one, choose **Skip the Inbox**, **Mark as read** and **Apply
-the label**. These strings were checked against real alert emails:
+Create a new filter.** Create one per portal you use. For each, choose **Skip
+the Inbox**, **Mark as read** and **Apply the label**. These strings were checked
+against real alert emails:
 
 | Label (create it exactly like this) | "From" field of the filter |
 |---|---|
 | `Job Alerts/JobStreet` | `"Jobstreet Job Alerts" OR "LiNa Recommendations"` |
+| `Job Alerts/Indeed` | `donotreply@jobalert.indeed.com` |
 | `Job Alerts/LinkedIn` | `jobalerts-noreply@linkedin.com OR jobs-noreply@linkedin.com` |
-| `Job Alerts/Indeed` *(optional, unmaintained parser)* | `donotreply@jobalert.indeed.com` |
+
+You don't need all three. A portal whose label doesn't exist is reported as
+"pending mailbox setup" and skipped.
 
 Why the JobStreet filter matches display names: JobStreet sends alerts **and**
 your application-status emails from the same address. Matching on the alert
 display names keeps "your application was viewed" emails in your inbox, where
-upstream's `/gmail-sync` looks for them.
+upstream's `/gmail-sync` looks for them. Indeed's alert address sends nothing
+but alerts; application emails come from other Indeed addresses.
 
-Different label names? Put yours in `gmail_alerts/config.json`:
+Different label names? Put yours in `gmail_alerts/config.json`, listing only
+the portals you want:
 
 ```json
-{"portals": {"jobstreet": "Alerts/JS", "linkedin": "Alerts/LI"}}
+{"portals": {"jobstreet": "Alerts/JS", "indeed": "Alerts/Indeed", "linkedin": "Alerts/LI"}}
 ```
 
 ## Part 3: Let the script read those labels
 
 `/gmail-alerts` uses IMAP with a Gmail **app password**. That's a separate
-16-character password for one app, which you can revoke any time without
-changing your real password. The script opens only the labels above,
-read-only, and never marks, moves or deletes mail.
+16-character password, which you can revoke any time without changing your
+real password.
 
 1. **Turn on IMAP:** Gmail → Settings → See all settings → *Forwarding and
    POP/IMAP* → Enable IMAP → Save.
@@ -114,16 +142,49 @@ with messages but `listings_extracted: 0`. To fix it:
 
 1. In Gmail, open the newest alert → **⋮ → Show original → Download original**.
 2. Copy the plain-text part into a `.txt` file and **remove your name and email**.
-3. Run `python3 tools/gmail_imap_fetch.py test --portal jobstreet --file that.txt`.
+3. Run `python3 tools/gmail_imap_fetch.py test --portal indeed --file that.txt`
+   (or `jobstreet` / `linkedin`).
 4. Fix the parser (the anchors are documented in
    `.claude/skills/job-scraper/email-alert-portals.md`), or open an issue with
    the scrubbed sample.
 
-## Privacy, in one list
+## Privacy: what reads your email, and the alternatives
 
-- The model never sees an email. The script sends it only title, company,
-  location, salary and link.
-- The app password lives in `gmail_alerts/.env` (gitignored) and is read only
-  by the scripts.
-- Only the labels you configure are opened, read-only.
-- To stop, delete the app password at `myaccount.google.com/apppasswords`.
+It's reasonable to be uneasy about an AI tool and your inbox, so here is
+exactly what happens.
+
+**What reads the email is a Python script, not the AI.**
+[`tools/gmail_imap_fetch.py`](../../tools/gmail_imap_fetch.py) logs in, opens
+only the labels in your config, parses each alert with fixed rules
+([`tools/digest_parsers.py`](../../tools/digest_parsers.py)), and writes the jobs
+to `job_scraper/seen_jobs.json` on your computer.
+
+**What reaches Claude** is only each job's title, company, location, salary,
+link and alert name: the same fields a job-board search returns. Claude never
+receives an email body, a sender, or anything from outside the job-alert labels.
+
+**What the script does not do:** it opens the labels read-only and fetches with
+`BODY.PEEK`, so it never marks, moves, labels, deletes or sends mail. The
+optional run-summary email (`tools/notify_email.py`) can only send to your own
+address.
+
+**The honest limit:** Google's app passwords are all-or-nothing. An app password
+*could* open your whole mailbox. The code is what keeps it to the job-alert
+labels: two short files you can read. If that isn't enough for you, use one of
+these instead:
+
+1. **A separate Gmail just for job alerts (recommended if you're unsure).**
+   Create a new Gmail account and point the job-alert emails at it. You can
+   either sign up to JobStreet, Indeed and LinkedIn alerts with it, or have
+   your main Gmail auto-forward only those senders to it (Settings → Forwarding
+   → add the address, then a filter on the senders above → *Forward it to*).
+   The app password then unlocks an inbox that contains nothing but job alerts.
+2. **Skip email entirely.** Don't create `gmail_alerts/.env`. `/scrape` still
+   searches LinkedIn, Hiredly and freehire (plus the remote boards if you opted
+   in). You lose JobStreet and Indeed, which can't be reached any other
+   permitted way; you can still read their alerts yourself and paste a posting
+   into `/apply`.
+
+**To stop at any time:** delete the app password at
+`myaccount.google.com/apppasswords`. Access ends immediately, and nothing else
+changes.

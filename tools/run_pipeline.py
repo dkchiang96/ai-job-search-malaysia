@@ -9,7 +9,7 @@ the same functions the real commands use:
 
   1 scrape   recorded portal-CLI output (hiredly-search, linkedin-search,
              remoteok-search) stored with tools/job_key.py keys, as /scrape Step 4 does
-  2 alerts   invented JobStreet + LinkedIn alert emails in their real layout, parsed by
+  2 alerts   invented JobStreet, Indeed and LinkedIn alert emails in their real layout, parsed by
              tools/digest_parsers.py and stored by tools/gmail_imap_fetch.py - which
              merges jobs already found by a portal CLI
   3 salary   tools/myr_salary.py normalises every pay string to monthly RM
@@ -39,6 +39,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import fit_model  # noqa: E402
+import digest_parsers  # noqa: E402
 import gmail_imap_fetch  # noqa: E402
 import job_store  # noqa: E402
 import myr_salary  # noqa: E402
@@ -104,6 +105,8 @@ def _as_email(subject: str, body: str) -> bytes:
 def stage_alerts(state: Path, today: str) -> dict:
     digests = [
         ("jobstreet", "4 new jobs for operations in Selangor", "jobstreet_digest.txt"),
+        ("indeed", "Warehouse Operations Lead at Gudang Contoh Sdn Bhd. 1 more operations jobs in Selangor",
+         "indeed_digest.txt"),
         ("linkedin", "Your job alert for operations manager in Malaysia", "linkedin_digest.txt"),
     ]
     listings = []
@@ -128,8 +131,9 @@ def stage_salary(state: Path) -> None:
             view = f"RM {p['monthly_min'] or '?':,} - {p['monthly_max'] or '?':,} /month"
         else:
             view = f"{p['currency']} {p['min']:,.0f} - {p['max']:,.0f} /{p['period']} (converted only with your own fx rate)"
-        flag = " [period assumed]" if p["period_assumed"] else ""
-        say(f"    {e['salary'][:38]:<38} -> {view}{flag}")
+        flag = (" [period assumed]" if p["period_assumed"] else "") + (" [may be estimated]" if p["estimated"] else "")
+        shown = e["salary"].replace(digest_parsers.INDEED_ESTIMATE_TAG, "")
+        say(f"    {shown[:38]:<38} -> {view}{flag}")
 
 
 def stage_rank(state: Path, today: date) -> dict:
@@ -180,7 +184,7 @@ def stage_history(state: Path, db: Path) -> None:
     for r in by_portal:
         say(f"    portal {r['portal']:<22} seen {r['seen']}  shortlisted {r['shortlisted']}")
     for r in by_alert:
-        say(f"    alert  {r['alert']!r:<42} seen {r['seen']}  shortlisted {r['shortlisted']}")
+        say(f"    alert  {r['portal'] + ' ' + repr(r['alert']):<50} seen {r['seen']}  shortlisted {r['shortlisted']}")
 
 
 def stage_outputs(state: Path, out_dir: Path, run_date: str) -> None:
@@ -204,7 +208,7 @@ def run_demo(out_dir: Path) -> int:
     say("== ai-job-search-malaysia demo: real pipeline code, invented jobs, no network ==")
     head(1, "Scrape portal CLIs (recorded output)")
     stage_scrape(state, today.isoformat())
-    head(2, "Import JobStreet + LinkedIn alert emails")
+    head(2, "Import JobStreet, Indeed and LinkedIn alert emails")
     stage_alerts(state, today.isoformat())
     head(3, "Normalise salaries to monthly RM")
     stage_salary(state)

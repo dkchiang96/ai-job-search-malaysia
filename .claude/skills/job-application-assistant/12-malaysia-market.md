@@ -1,5 +1,5 @@
 ---
-framework_version: 1.0.0
+framework_version: 1.1.0
 ---
 
 # Malaysia Market Rules (Malaysia adaptation)
@@ -59,8 +59,10 @@ strengths/gaps. They are not gates:
   month" or a performance bonus), plus allowances (transport, phone, parking,
   shift). Compare **base with base**. Mention bonus months or allowances in
   strengths, never add them into the figure.
-- **Indeed's figures are often estimates**, and the email says so.
-  `myr_salary` flags `estimated`, and an estimate never trips a salary gate.
+- **Indeed's figures may be estimates**, and the email doesn't say which, so
+  every Indeed alert salary is stored tagged "(Indeed: may be estimated)".
+  `myr_salary` flags `estimated`, and an estimate never trips a salary gate. A
+  figure from the employer's own posting, found by `/rank`, replaces it.
 - **JobStreet's "Strong applicant" badge and salary-match labels** are the
   portal's own matching signals. Record them in strengths. They are not
   employer-stated pay.
@@ -124,6 +126,10 @@ The authoritative table, with dates and robots.txt quotes, is
 - **Never fetch `my.jobstreet.com/job/...`** or any JobStreet search URL with a
   query string. They are robots-disallowed, and AI crawlers are named
   explicitly. JobStreet jobs arrive only through `/gmail-alerts`.
+- **Never fetch any `indeed.com` job link**: `/viewjob`, `/rc/clk`,
+  `/pagead/clk` or `engage.indeed.com` redirects. The job pages are
+  robots-disallowed and Indeed's Terms bar AI agents from the site. Indeed jobs
+  arrive only through `/gmail-alerts`.
 - **Never call `my-api.hiredly.com`**, which is robots-disallowed for all
   agents. `hiredly-search` uses only `my.hiredly.com` pages.
 - **MYFutureJobs** requires a login for all job data. Don't try to fetch it.

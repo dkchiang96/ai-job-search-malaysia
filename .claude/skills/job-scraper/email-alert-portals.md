@@ -91,30 +91,55 @@ misses, and the filter keeps the daily volume out of your inbox.
   The parser rewrites them to `https://my.linkedin.com/jobs/view/<id>`, the form
   `linkedin-search` itself returns, so dedup against CLI results works.
 
-## Indeed Malaysia (opt-in, not maintained)
+## Indeed Malaysia (default on)
 
-The parser was built against 6 real digests on 2026-08-22 and has not been
-re-checked since. Every Indeed tracking link tested at the time returned HTTP
-404 when fetched, so an Indeed listing can rarely be read past its email
-fields. Enable it only if you accept that. Add
-`"indeed": "Job Alerts/Indeed"` to `gmail_alerts/config.json`, and send a fresh
-sample (see above) if it no longer parses.
+Indeed's Terms ban "any automated system (bots, scrapers, spiders, AI or Agentic
+AI)" from the site, and `robots.txt` disallows its job pages (`/viewjob`) and
+click-through links (`/rc/`, `/pagead/`). A plain request to its search page
+returns 403. Alerts are the only permitted way in.
 
-- **Suggested filter:** `from:(donotreply@jobalert.indeed.com)`. This address is
-  used only for alerts.
-- **Subjects:** the one-time "Your job alert for ... is now active" confirmation
-  has no listings. Digest: `"<search> in <location>: <first title> at <company>
-  and <N> more new jobs - ..."`.
-- **Listing anchor:** after a `Jobs 1-N of N new jobs` header and a
-  `See matching results on Indeed:` line, each listing is **title**,
-  **company - location** (split on the last `" - "`), optional **salary**,
-  optional `Easily apply`, a one-line snippet, a relative date (`Just posted`,
-  `N days ago`), then the tracking link. There are no blank separators between
-  listings; the relative-date line ends each one.
-- **Quirks:** salaries are often Indeed's *estimate* (its footer says so).
-  `tools/myr_salary.py` flags `estimated` when the text says it. The `jk=` job
-  key in the plain-text body is often mangled. Never rebuild a `viewjob?jk=`
-  URL from it.
+- **Suggested filter:** `from:(donotreply@jobalert.indeed.com)` → Skip Inbox,
+  Apply label `Job Alerts/Indeed`. This address sends only alerts (checked:
+  315 of 315 messages from it were alerts or alert activations). Application
+  mail comes from `indeedapply@indeed.com` and stays in your inbox.
+- **Alert name:** read from the body line `<N> new <search> jobs in <place>` (or
+  `<N> new <search> jobs (Remote)`), giving `"<search> in <place>"`. The
+  subject is the fallback only: Indeed has worded it at least eight ways since
+  2026-04 (`"<title> at <company>. <N> more <search> jobs in <place>"`,
+  `"<search>: <title> at <company> and <N> more new jobs"`, ...).
+- **Listing anchor** (layout as of 2026-04 to 09; checked 2026-09-27 against
+  every alert in one real inbox from 2026-04-01 to 26: 315 emails, 4,387
+  cards, none malformed). **Every card ends with its own link on its own line**,
+  so the parser splits on links, like JobStreet:
+  1. Header, all skipped: `Indeed Job Alert`, the `<N> new <search> jobs ...`
+     line (**listings start after it**), `Jobs 1-N of M new jobs`,
+     `See matching results on Indeed: <url>`.
+  2. Each card: **title**, **company - location** (split on the last `" - "`;
+     a title may itself contain `" - "`), then optional **salary**, optional
+     badges (`Responsive employer`, `Easily apply`), a one-line snippet, and a
+     relative date (`Just posted`, `1 day ago`, `N days ago`) that **must** be
+     the card's last line or the card is dropped.
+  3. The link: `malaysia.indeed.com/rc/clk/...` (organic),
+     `.../pagead/clk/...` (sponsored, which are extra cards beyond the header's
+     count, so `Jobs 1-22 of 24` can carry 24 cards), or
+     `engage.indeed.com/f/a/...` (in activation emails).
+  4. Footer after the last link (`Do not share this email`, the estimate note,
+     legal and unsubscribe lines) is ignored.
+- **Salary:** only a whole line shaped `[From |Up to ]RM X[ - RM Y] a
+  month|an hour|a day|a week|a year` counts, so a figure inside the snippet
+  can't be mistaken for one. Seen: month 81%, hour 13%, then day, year and week.
+  The footer says *"Salaries estimated if unavailable"*, and no card says which
+  figure is an estimate, so the parser appends `(Indeed: may be estimated)` to
+  every Indeed salary. `tools/myr_salary.py` reads that as `estimated`: the
+  figure is shown and benchmarked separately, and never trips a salary floor.
+- **Activation emails** (`"Your job alert for ... is now active"`) usually carry
+  a first batch of listings under the same `<N> new ...` line, with
+  `engage.indeed.com` links. They are parsed like digests. One with no
+  listings has no count line and yields nothing.
+- **Quirks:** every link is a per-recipient tracking redirect to a
+  robots-disallowed page. **Never fetch one.** It's for the user to click. `/rank`
+  finds the employer's own posting instead. Never rebuild a `viewjob?jk=` URL
+  from the `jk=` value either; `/viewjob` is disallowed too.
 
 ## Adding another portal's alerts
 

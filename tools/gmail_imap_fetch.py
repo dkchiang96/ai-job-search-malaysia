@@ -6,7 +6,8 @@ requests to its job pages and to query-string searches in robots.txt, and names
 AI crawlers explicitly. What it does offer is an opt-in email alert: you save a
 search on JobStreet's own site and it emails you new matches. Reading your own
 inbox touches none of JobStreet's servers. This script does exactly that, for
-JobStreet, LinkedIn and (unmaintained) Indeed alert digests.
+JobStreet, LinkedIn and Indeed alert digests (Indeed's Terms ban automated
+access outright, so its alerts are the only way in there too).
 
 The model never sees a raw email. The script logs in with a Gmail app password,
 reads only the labels you configured, parses each digest with the deterministic
@@ -26,7 +27,8 @@ SETUP (one-time, ~5 minutes) - full walkthrough in docs/malaysia/JOB-ALERTS.md:
        GMAIL_IMAP_APP_PASSWORD=<the 16-character app password>
   4. Create one Gmail filter + label per portal (defaults below). Change the
      label names in gmail_alerts/config.json if yours differ:
-       {"portals": {"jobstreet": "Job Alerts/JobStreet", "linkedin": "Job Alerts/LinkedIn"}}
+       {"portals": {"jobstreet": "Job Alerts/JobStreet", "linkedin": "Job Alerts/LinkedIn",
+                    "indeed": "Job Alerts/Indeed"}}
 
 Usage:
   python3 tools/gmail_imap_fetch.py run [--since YYYY-MM-DD] [--portal jobstreet] [--dry-run]
@@ -60,11 +62,12 @@ ENV_FILE = ALERTS_DIR / ".env"
 CONFIG_FILE = ALERTS_DIR / "config.json"
 SEEN_JOBS = ROOT / "job_scraper" / "seen_jobs.json"
 
-# Default labels. Indeed is deliberately absent: its parser is kept but
-# unmaintained (see email-alert-portals.md), so it is opt-in via config.json.
+# Default labels. A portal whose label doesn't exist yet is reported as
+# "pending mailbox setup", never an error, so unused defaults cost nothing.
 DEFAULT_PORTALS = {
     "jobstreet": "Job Alerts/JobStreet",
     "linkedin": "Job Alerts/LinkedIn",
+    "indeed": "Job Alerts/Indeed",
 }
 FIRST_RUN_LOOKBACK_DAYS = 30
 NEW_LISTINGS_SHOWN = 60  # cap on listings echoed back to the model per run
@@ -146,7 +149,7 @@ def listings_from_message(portal: str, raw: bytes) -> list[dict]:
     parser = digest_parsers.PARSERS.get(portal)
     if parser is None or not body:
         return []
-    alert = digest_parsers.alert_name_from_subject(portal, _decode_header(msg.get("Subject")))
+    alert = digest_parsers.alert_name(portal, _decode_header(msg.get("Subject")), body)
     out = []
     for listing in parser(body):
         listing["portal"] = portal

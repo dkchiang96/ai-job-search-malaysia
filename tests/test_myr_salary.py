@@ -31,6 +31,11 @@ class TestPortalShapes(unittest.TestCase):
         self.assertEqual(p["monthly_max"], 15000)
         self.assertTrue(p["estimated"])
 
+    def test_weekly_rate_is_not_read_as_monthly(self):
+        p = parse_salary("From RM 1,000 a week")
+        self.assertEqual((p["period"], p["period_assumed"]), ("week", False))
+        self.assertIsNone(p["monthly_min"])
+
     def test_myr_decimals_and_mth(self):
         p = parse_salary("MYR 5,000.00 - 8,000.00/mth (Negotiable)")
         self.assertEqual((p["monthly_min"], p["monthly_max"]), (5000, 8000))

@@ -19,12 +19,39 @@ An AI-powered job application framework built on [Claude Code](https://claude.co
 > This is a fork of [MadsLorentzen/ai-job-search](https://github.com/MadsLorentzen/ai-job-search), adapted for job-hunting in Malaysia. **Everything below is Mads's README and still applies.** The Malaysia layer is added alongside his workflow and doesn't replace it:
 >
 > - **Hiredly search:** `hiredly-search`, a new portal skill for Malaysia's graduate and professional board. Personal use only; see its `SKILL.md`.
-> - **JobStreet via email alerts:** JobStreet's `robots.txt` blocks automated search, so `/gmail-alerts` reads the saved-search alert emails JobStreet sends you (plus LinkedIn's) and adds them to the same pipeline.
+> - **JobStreet and Indeed via email alerts:** both forbid automated search, so `/gmail-alerts` reads the saved-search alert emails they send you (plus LinkedIn's) and adds them to the same pipeline. Optional: see [who reads your email](#who-reads-your-email).
 > - **Remote roles open to Malaysia (optional):** three remote-only boards, plus a check that drops "remote" jobs that are really US-only or hybrid.
 > - **RM salaries:** RM pay-text parsing, plus Malaysian location, language (BM/Mandarin) and eligibility rules.
 > - **Optional extras, all off by default:** your own Word resume edited in place, a Fit Model scorer you configure at setup, a job-history database, and `/jobs` scheduled runs with Notion and an email summary.
 >
 > **Start here:** run `python3 tools/run_pipeline.py --demo` (offline, about a second), then `/setup` → `/setup-malaysia`. Full notes: [docs/malaysia/](docs/malaysia/README.md). **Tracking:** merges upstream monthly ([routine](docs/malaysia/UPSTREAM-SYNC.md)). Maintained by [@dkchiang96](https://github.com/dkchiang96).
+
+### Where the Malaysia edition finds jobs
+
+| Source | How it's reached | Default | Limits, and why |
+|---|---|---|---|
+| **LinkedIn** | `linkedin-search` (Mads's skill) with a Malaysian location, plus LinkedIn alert emails | on | Public job pages only. The alert emails add jobs LinkedIn recommends that a keyword search misses. |
+| **Hiredly** | `hiredly-search` (new) | on | Its search API is blocked in `robots.txt`, so the skill reads Hiredly's category and state pages and filters keywords on your machine. Personal, non-commercial use under Hiredly's Terms. |
+| **freehire** | `freehire-search` (Mads's skill), filtered to Malaysia | on | An aggregator of employer career sites; strongest for tech roles. |
+| **JobStreet** | Your JobStreet alert emails, read by `/gmail-alerts` | on once Gmail is connected | `robots.txt` blocks its job pages and names AI crawlers, so nothing searches JobStreet. You get what your saved searches send, **10 alerts at most**, and the emails carry no job description, so `/rank` looks for the employer's own posting and parks the job as "unverified" if there isn't one. |
+| **Indeed** | Your Indeed alert emails, read by `/gmail-alerts` | on once Gmail is connected | Indeed's Terms ban bots and AI agents, and its search refuses scripts. Same limits as JobStreet, and Indeed fills in **estimated salaries** without saying which, so every Indeed salary is tagged "may be estimated" and never used to rule a job out. |
+| **Remote OK, We Work Remotely, Working Nomads** | Three remote-only board skills (new) | off; `/setup-malaysia` asks | Remote roles only. Every "remote" job must pass a check that drops ones that are really US-only or hybrid, and flags awkward time-zone overlap. Remote OK asks for a link back if you publish its listings. |
+| **Maukerja, Glints** | Not automated | - | `robots.txt` blocks their search. Check them yourself. |
+| **MYFutureJobs** | Not automated | - | Every job needs a login, and a script won't log in for you. |
+| **Jora** | - | - | Closed in Malaysia. |
+
+The full reasoning, with each site's rules quoted, is in [PORTALS.md](docs/malaysia/PORTALS.md).
+
+#### Who reads your email
+
+Email alerts are the only permitted way to get JobStreet and Indeed jobs, but connecting Gmail is **optional**:
+
+- **A Python script reads the alerts, not the AI.** [`tools/gmail_imap_fetch.py`](tools/gmail_imap_fetch.py) opens only the job-alert labels you create, read-only, and never marks, moves, deletes or sends mail.
+- **Claude sees only each job's title, company, location, salary and link.** It never sees an email.
+- **You can revoke it any time.** It logs in with a Gmail app password that you create yourself, and deleting that password ends access.
+- **Still uneasy?** Point your job alerts at a **separate Gmail used only for them**, or **skip email**. `/scrape` still covers LinkedIn, Hiredly and freehire.
+
+Details: [JOB-ALERTS.md → Privacy](docs/malaysia/JOB-ALERTS.md#privacy-what-reads-your-email-and-the-alternatives).
 
 > Note: This is an independent open-source project and is not affiliated with, endorsed by, sponsored by, or maintained by Anthropic. Anthropic and Claude Code are referenced only to describe the toolchain this workflow uses.
 >

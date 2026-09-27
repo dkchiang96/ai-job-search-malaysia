@@ -393,5 +393,47 @@
         "stability": 0
       }
     }
+  },
+  "Gudang Contoh Sdn Bhd|Warehouse Operations Lead": {
+    "location_verdict": "PASS",
+    "language_gate": "PASS",
+    "strengths": [
+      "Warehouse and dispatch operations - direct match",
+      "Owns KPI reporting"
+    ],
+    "gaps": [
+      "3PL client management is new"
+    ],
+    "fit_inputs": {
+      "location_category": "Selangor",
+      "domain_exclusion_pct": 0,
+      "glassdoor": 3.5,
+      "required_years": 5,
+      "requirements": [
+        {
+          "req": "5+ yrs warehouse or logistics operations",
+          "must": true,
+          "score": 1
+        },
+        {
+          "req": "KPI reporting",
+          "must": true,
+          "score": 1
+        },
+        {
+          "req": "3PL client management",
+          "must": false,
+          "score": 0.5
+        }
+      ],
+      "domain_tier": 100,
+      "keyword_coverage_pct": 75,
+      "employer_type": "startup_or_sme",
+      "direction": {
+        "growth": 50,
+        "skills": 50,
+        "stability": 50
+      }
+    }
   }
 }

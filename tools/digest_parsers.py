@@ -11,9 +11,9 @@ Validation status: the JobStreet and LinkedIn parsers were built against real
 Malaysian alert digests and re-checked on 2026-09-26 against every alert from
 the previous 7 days (JobStreet: 64 digests, 774 listings; LinkedIn: 21 digests,
 120 listings; none malformed). That check drove the card-based JobStreet
-rewrite below. The Indeed parser was
-built against 6 real digests on 2026-08-22 and has **not been maintained** since
-(see email-alert-portals.md). The unit tests use synthetic text shaped like
+rewrite below. The Indeed parser was rebuilt card-based on 2026-09-27 and
+checked against every Indeed alert in a real inbox from 2026-04-01 to 26
+(315 emails, 4,387 cards, none malformed). The unit tests use synthetic text shaped like
 those samples, so they prove the parsing logic, not that a portal's layout is
 unchanged. Check a fresh sample any time with
 `python3 tools/gmail_imap_fetch.py test --portal <p> --file <saved.txt>`.
@@ -167,53 +167,78 @@ def parse_jobstreet(body: str) -> list[dict]:
     return listings
 
 
-_INDEED_DATE_RE = re.compile(r"^(Just posted|\d+\+?\s*day(s)?\s*ago|Today|Active\s+\d+\+?\s*day(s)?\s*ago)$", re.IGNORECASE)
-_INDEED_APPLY_URL_RE = re.compile(r"^https?://\S*indeed\.com/(rc/clk|pagead/clk)\S*")
-
-
-_INDEED_HEADER_RE = re.compile(r"^Jobs \d+-\d+ of \d+|^See matching results on Indeed", re.IGNORECASE)
+_INDEED_DATE_RE = re.compile(r"^(Just posted|Today|(Active\s+)?\d+\+?\s*days?\s*ago)$", re.IGNORECASE)
+# Every card ends with its own link on its own line: `rc/clk` (organic),
+# `pagead/clk` (sponsored), or `engage.indeed.com/f/a/` (the listings inside a
+# "your job alert is now active" email).
+_INDEED_APPLY_URL_RE = re.compile(
+    r"^https?://(\S*indeed\.com/(rc/clk|pagead/clk)|engage\.indeed\.com/f/a/)\S*")
+# The line that opens the listings: "23 new supply chain jobs in Penang",
+# "7 new customer service jobs (Remote)". Everything above it (title banner,
+# the activation email's browse/unsubscribe links) is header.
+_INDEED_COUNT_RE = re.compile(
+    r"^\d+\s+new\s+(?P<query>.+?)\s+jobs?(?:\s+in\s+(?P<where>.+?)|\s+\((?P<paren>[^)]+)\))?\s*$",
+    re.IGNORECASE)
+_INDEED_HEADER_RE = re.compile(r"^(Jobs \d+-\d+ of \d+|See matching results on Indeed)", re.IGNORECASE)
+_INDEED_SALARY_RE = re.compile(
+    r"^(?:(?:from|up to|starting at)\s+)?RM\s?[\d,.]+(?:\s*-\s*RM\s?[\d,.]+)?\s+an?\s+(?:hour|day|week|month|year)$",
+    re.IGNORECASE)
+# Indeed's footer: "Salaries estimated if unavailable. When a job posting
+# doesn't include a salary, we estimate it..." - and no card says which of its
+# figures is an estimate. So every Indeed figure carries this tag, which
+# tools/myr_salary.py reads as `estimated`: it is shown and benchmarked, but it
+# never trips a salary floor.
+INDEED_ESTIMATE_TAG = " (Indeed: may be estimated)"
 
 
 def parse_indeed(body: str) -> list[dict]:
-    """No blank-line separators. Per listing: title / "company - location" /
-    [salary]? / [Easily apply]? / description snippet / relative-date / apply
-    link - the apply link trails its OWN listing's date line, immediately
-    before the next listing's title starts, so it must be consumed before the
-    next accumulation window begins rather than folded into either block."""
-    lines = [ln.strip() for ln in body.splitlines() if ln.strip()]
-    lines = [ln for ln in lines if not _INDEED_HEADER_RE.match(ln)]
+    """Card-based, like JobStreet. After the "<N> new <search> jobs ..." line,
+    each card is: title / "company - location" / [salary]? / [badges]* /
+    snippet / relative date / link. Only title and company line depend on
+    position. A card that doesn't end in a date line is not a listing and is
+    dropped rather than guessed at. An email without the count line (an
+    activation notice with no listings) yields nothing.
 
-    listings = []
-    i, n = 0, len(lines)
-    while i < n:
-        title = lines[i]
-        i += 1
-        if i >= n:
-            break
-        company_location = lines[i]
-        i += 1
-        company, _, location = company_location.rpartition(" - ")
+    Checked 2026-09-27 against every Indeed alert in a real inbox,
+    2026-04-01 to 2026-09-26: 315 emails, 4,387 cards, none malformed."""
+    lines = [ln.strip() for ln in body.replace(" ", " ").splitlines() if ln.strip()]
+    start = next((i + 1 for i, ln in enumerate(lines) if _INDEED_COUNT_RE.match(ln)), None)
+    if start is None:
+        return []
 
-        body_lines = []
-        while i < n and not _INDEED_DATE_RE.match(lines[i]):
-            body_lines.append(lines[i])
-            i += 1
-        if i >= n:
-            break  # no date terminator found - malformed tail, stop rather than guess
-        i += 1  # consume the date line itself
-
-        url = None
-        if i < n and _INDEED_APPLY_URL_RE.match(lines[i]):
-            url = lines[i]
-            i += 1
-
-        body_lines = [ln for ln in body_lines if not re.match(r"^easily apply$", ln, re.IGNORECASE)]
-        salary = next((ln for ln in body_lines if re.search(r"\b(RM|MYR|\$)\s?[\d,]+", ln)), None)
-
-        if title and company:
-            listings.append({"title": title, "company": company or None, "location": location or None,
-                              "salary": salary, "url": url})
+    listings, card = [], []
+    for ln in lines[start:]:
+        if not _INDEED_APPLY_URL_RE.match(ln):
+            if not _INDEED_HEADER_RE.match(ln):
+                card.append(ln)
+            continue
+        url, fields, card = ln, card, []
+        if len(fields) < 3 or not _INDEED_DATE_RE.match(fields[-1]):
+            continue
+        company, sep, location = fields[1].rpartition(" - ")
+        if not sep:
+            company, location = fields[1], ""
+        salary = next((f for f in fields[2:-1] if _INDEED_SALARY_RE.match(f)), None)
+        listings.append({
+            "title": fields[0],
+            "company": company.strip() or None,
+            "location": location.strip() or None,
+            "salary": salary + INDEED_ESTIMATE_TAG if salary else None,
+            "url": url,
+        })
     return listings
+
+
+def indeed_alert_name(body: str) -> str | None:
+    """The saved search a digest was sent for, from its "<N> new <search> jobs
+    in <place>" line. More reliable than the subject, which Indeed has worded
+    at least eight ways since 2026-04."""
+    for ln in body.splitlines():
+        m = _INDEED_COUNT_RE.match(ln.strip())
+        if m:
+            where = m.group("where") or m.group("paren")
+            return f"{m.group('query')} in {where}" if where else m.group("query")
+    return None
 
 
 _LINKEDIN_RULE_RE = re.compile(r"^-{3,}$")
@@ -315,3 +340,18 @@ def alert_name_from_subject(portal: str, subject: str | None) -> str | None:
         if m:
             return m.group("name").strip()
     return None
+
+
+# Portals whose digest body names the saved search more reliably than the
+# subject does. Tried first; the subject patterns above are the fallback.
+BODY_ALERT_NAME = {
+    "indeed": indeed_alert_name,
+}
+
+
+def alert_name(portal: str, subject: str | None, body: str | None) -> str | None:
+    """The saved-search name for one digest: from the body where the portal
+    states it there, else from the subject."""
+    from_body = BODY_ALERT_NAME.get(portal)
+    name = from_body(body) if from_body and body else None
+    return name or alert_name_from_subject(portal, subject)

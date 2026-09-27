@@ -18,8 +18,9 @@ Rules (every one is a documented assumption, never a silent guess):
   * Annual figures are divided by 12 for the monthly view. Bonus months,
     allowances and the employer's EPF share are NOT added - the figure is the
     stated base, which is what a posting's range means.
-  * Daily and hourly rates are parsed but never converted to monthly (working
-    days vary too much); `monthly_*` stay null and the period says why.
+  * Weekly, daily and hourly rates are parsed but never converted to monthly
+    (working days vary too much); `monthly_*` stay null and the period says
+    why. Indeed uses "a week" ("From RM 1,000 a week").
   * Non-MYR currencies (SGD, USD, ...) are parsed with their currency and left
     unconverted - an FX rate baked in here would silently go stale.
   * "Undisclosed", "Negotiable", "Competitive" and similar yield no figures.
@@ -53,6 +54,7 @@ _NO_FIGURE_RE = re.compile(r"\b(undisclosed|negotiable|competitive|not (?:disclo
 _PERIODS = [
     ("year", re.compile(r"(per\s+(?:year|annum)|a\s+year|/\s*(?:yr|year|annum)|p\.?\s*a\.?(?![a-z])|annual(?:ly)?|yearly)", re.IGNORECASE)),
     ("month", re.compile(r"(per\s+month|a\s+month|/\s*(?:mth|mo|month)\b|monthly|\bmth\b|sebulan|bulanan)", re.IGNORECASE)),
+    ("week", re.compile(r"(per\s+week|a\s+week|/\s*(?:wk|week)\b|weekly|seminggu)", re.IGNORECASE)),
     ("day", re.compile(r"(per\s+day|a\s+day|/\s*day|daily|sehari)", re.IGNORECASE)),
     ("hour", re.compile(r"(per\s+hour|an\s+hour|/\s*(?:hr|hour)|hourly|sejam)", re.IGNORECASE)),
 ]
@@ -111,7 +113,7 @@ def parse_salary(text: str | None) -> dict | None:
             return round(v)
         if period == "year":
             return round(v / 12)
-        return None  # day / hour: never converted
+        return None  # week / day / hour: never converted
 
     return {
         "raw": raw,

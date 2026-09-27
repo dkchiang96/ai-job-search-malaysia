@@ -2,8 +2,8 @@
 
 `/setup` builds your profile the way upstream designed it. `/setup-malaysia`
 then adds everything specific to job-hunting in Malaysia: which states you'll
-work in, **whether you also want remote roles**, how JobStreet reaches you
-(email alerts), your salary numbers in RM, your CV format (LaTeX or your own
+work in, **whether you also want remote roles**, how JobStreet and Indeed reach you
+(email alerts, or not at all if you'd rather), your salary numbers in RM, your CV format (LaTeX or your own
 Word file), and the optional extras. Every section can be skipped, and
 re-running it only changes the sections you pick (`/setup-malaysia remote`,
 `/setup-malaysia salary`, ...).
@@ -95,15 +95,25 @@ Write the figures to `config/fit_model.json` → `worth.salary_myr_month` and
 `config/malaysia.json` → `"salary_myr_month"`. **Never** write them to any
 tracked file. The method is in `docs/malaysia/SALARY.md`.
 
-## Section 5: JobStreet and LinkedIn email alerts
+## Section 5: JobStreet, Indeed and LinkedIn email alerts
 
-Explain why (JobStreet blocks automated search, but its own email alerts are
-fine), then walk them through `docs/malaysia/JOB-ALERTS.md` one step at a
+Explain why (JobStreet and Indeed block automated search, but their own email
+alerts are fine). Then **ask before anything else**: *"This part lets a script
+on your computer read your job-alert emails. Only job title, company,
+location, salary and link reach me, never an email. Would you like to (a)
+connect your main Gmail, (b) use a separate Gmail just for job alerts, or (c)
+skip it for now?"* Summarise the doc's "Privacy" section if they hesitate, and
+treat (c) as a perfectly good answer: `/scrape` still covers LinkedIn, Hiredly
+and freehire.
+
+For (a) or (b), walk them through `docs/malaysia/JOB-ALERTS.md` one step at a
 time:
-1. Plan the **10 JobStreet saved searches** with the worksheet in that doc.
-   JobStreet allows 10. Scope most of them to a city, not "Remote", and set
-   each to daily.
-2. Create the Gmail filters and labels (the exact filter strings are in the doc).
+1. Plan the saved searches with the worksheet in that doc: **10 JobStreet
+   alerts at most**, plus Indeed and LinkedIn alerts. Scope most to a city, not
+   "Remote", and set each to daily. For (b), sign up to the alerts with the new
+   address, or forward those senders to it.
+2. Create the Gmail filters and labels for the portals they use (the exact
+   filter strings are in the doc).
 3. Enable IMAP, create a Gmail app password, and put both lines in
    `gmail_alerts/.env`. **The user types the password into that file
    themselves. Never ask for it in chat.**
@@ -183,7 +193,7 @@ then summarise:
 > **Malaysia setup done.**
 > - Areas: <ideal> (acceptable: <...>)
 > - Remote roles: <on - 3 remote boards enabled | off>
-> - JobStreet/LinkedIn alerts: <connected | to do - see docs/malaysia/JOB-ALERTS.md>
+> - JobStreet/Indeed/LinkedIn alerts: <connected | separate Gmail | skipped | to do - see docs/malaysia/JOB-ALERTS.md>
 > - CV: <stock LaTeX | your Word resume (<file>)>
 > - Scorer: <default | Fit Model with goals: ...>
 > - Extras: <history, /jobs, schedule, Notion - whichever are on>

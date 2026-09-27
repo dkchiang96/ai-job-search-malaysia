@@ -50,32 +50,108 @@ class TestJobStreetParser(unittest.TestCase):
         self.assertEqual(listings[0]["url"], "https://url.jobstreet.com/x")
 
 
+INDEED_DIGEST = (
+    "Indeed Job Alert\n"
+    "3 new supply chain jobs in Penang\n"
+    "\n"
+    "Jobs 1-3 of 3 new jobs\n"
+    "See matching results on Indeed: https://malaysia.indeed.com/jobs?q=supply+chain&l=Penang\n"
+    "\n\n"
+    "Supply Chain Manager\n"
+    "Syarikat Contoh Bhd - Bayan Lepas\n"
+    "RM 10,000 - RM 15,000 a month\n"
+    "Responsive employer\n"
+    "Easily apply\n"
+    "Lead planning and logistics across three plants. Salary RM 12k negotiable.\n"
+    "2 days ago\n"
+    "https://malaysia.indeed.com/rc/clk/dl?jk=abc123\n"
+    "\n"
+    "Warehouse Lead\n"
+    "Contoh Neo - Butterworth\n"
+    "From RM 1,000 a week\n"
+    "Run a two-shift warehouse team.\n"
+    "Just posted\n"
+    "https://malaysia.indeed.com/pagead/clk/dl?mo=r&ad=demo\n"
+    "\n"
+    "Planner - Demand & Supply\n"
+    "Kilang Contoh Group - Penang\n"
+    "Own the monthly demand plan.\n"
+    "1 day ago\n"
+    "https://malaysia.indeed.com/rc/clk/dl?jk=def456\n"
+    "\n\n\n"
+    "Do not share this email\n"
+    "Salaries estimated if unavailable. When a job posting doesn't include a salary, we estimate it.\n"
+    "Unsubscribe from this job alert: https://subscriptions.indeed.com/alerts/cancel?t=demo\n"
+)
+
+
 class TestIndeedParser(unittest.TestCase):
-    def test_relative_date_terminates_block_no_blank_lines(self):
+    """Shaped like the 2026-04..09 layout (315 real emails checked 2026-09-27)."""
+
+    def test_every_card_parsed_including_the_first_and_sponsored(self):
+        listings = parse_indeed(INDEED_DIGEST)
+        self.assertEqual([x["title"] for x in listings],
+                         ["Supply Chain Manager", "Warehouse Lead", "Planner - Demand & Supply"])
+        self.assertEqual(listings[0]["company"], "Syarikat Contoh Bhd")
+        self.assertEqual(listings[0]["location"], "Bayan Lepas")
+        self.assertEqual(listings[0]["url"], "https://malaysia.indeed.com/rc/clk/dl?jk=abc123")
+        self.assertIn("pagead", listings[1]["url"])
+        self.assertIsNone(listings[2]["salary"])
+
+    def test_title_with_a_dash_keeps_it(self):
+        self.assertEqual(parse_indeed(INDEED_DIGEST)[2]["title"], "Planner - Demand & Supply")
+
+    def test_salary_is_the_salary_line_not_a_figure_in_the_snippet(self):
+        salary = parse_indeed(INDEED_DIGEST)[0]["salary"]
+        self.assertTrue(salary.startswith("RM 10,000 - RM 15,000 a month"))
+
+    def test_every_salary_is_tagged_possibly_estimated(self):
+        from myr_salary import parse_salary
+        for listing in parse_indeed(INDEED_DIGEST)[:2]:
+            self.assertIn("may be estimated", listing["salary"])
+            self.assertTrue(parse_salary(listing["salary"])["estimated"])
+
+    def test_weekly_pay_is_not_read_as_monthly(self):
+        from myr_salary import parse_salary
+        p = parse_salary(parse_indeed(INDEED_DIGEST)[1]["salary"])
+        self.assertEqual(p["period"], "week")
+        self.assertIsNone(p["monthly_min"])
+
+    def test_card_without_a_date_line_is_dropped_not_guessed(self):
+        body = INDEED_DIGEST.replace("Just posted\n", "")
+        self.assertEqual([x["title"] for x in parse_indeed(body)],
+                         ["Supply Chain Manager", "Planner - Demand & Supply"])
+
+    def test_activation_email_listings_use_engage_links(self):
         body = (
-            "Jobs 1-2 of 2 new jobs\n"
-            "See matching results on Indeed: https://malaysia.indeed.com/jobs?q=operations\n"
-            "Operations Director\n"
-            "Syarikat Contoh Bhd - Kuala Lumpur\n"
-            "RM 10,000 - RM 15,000 a month\n"
+            "Your job alert is active\n"
+            "You'll receive your first daily job alert for supply chain in Penang when jobs become available.\n"
+            "https://engage.indeed.com/f/a/browse~demo\n"
+            "https://engage.indeed.com/f/a/unsubscribe~demo\n"
+            "1 new supply chain jobs in Penang\n"
+            "Buyer\n"
+            "Contoh Neo - Penang\n"
             "Easily apply\n"
-            "Lead our operations team across three markets and drive growth.\n"
-            "2 days ago\n"
-            "https://malaysia.indeed.com/rc/clk/dl?jk=abc123\n"
-            "Head of Operations\n"
-            "Contoh Neo - Petaling Jaya\n"
-            "Manage day to day payment operations for a fast growing fintech.\n"
-            "Just posted\n"
-            "https://malaysia.indeed.com/rc/clk/dl?jk=def456\n"
+            "Source parts.\n"
+            "3 days ago\n"
+            "https://engage.indeed.com/f/a/job~demo\n"
         )
         listings = parse_indeed(body)
-        self.assertEqual(len(listings), 2)
-        self.assertEqual(listings[0]["title"], "Operations Director")
-        self.assertEqual(listings[0]["company"], "Syarikat Contoh Bhd")
-        self.assertEqual(listings[0]["location"], "Kuala Lumpur")
-        self.assertIn("RM", listings[0]["salary"])
-        self.assertEqual(listings[1]["title"], "Head of Operations")
-        self.assertIsNone(listings[1]["salary"])
+        self.assertEqual([(x["title"], x["url"]) for x in listings],
+                         [("Buyer", "https://engage.indeed.com/f/a/job~demo")])
+
+    def test_activation_email_without_listings_yields_nothing(self):
+        body = ("Your job alert is active\n"
+                "https://engage.indeed.com/f/a/browse~demo\n"
+                "Privacy Policy: https://engage.indeed.com/f/a/p~demo\n")
+        self.assertEqual(parse_indeed(body), [])
+
+    def test_alert_name_comes_from_the_body_not_the_subject(self):
+        from digest_parsers import alert_name
+        subject = "Supply Chain Manager at Syarikat Contoh Bhd. 2 more supply chain jobs in Penang"
+        self.assertEqual(alert_name("indeed", subject, INDEED_DIGEST), "supply chain in Penang")
+        self.assertEqual(alert_name("indeed", None, "7 new customer service jobs (Remote)\n"),
+                         "customer service in Remote")
 
 
 class TestLinkedInParser(unittest.TestCase):

@@ -63,7 +63,7 @@ class TestJobStore(unittest.TestCase):
         by_alert = js.yield_report(conn, "alert", None, 55, self.tracker)
         by_portal = js.yield_report(conn, "portal", None, 55, self.tracker)
         conn.close()
-        self.assertEqual(by_alert, [{"alert": "ops in KL", "seen": 2, "ranked": 1, "shortlisted": 1, "applied": 1,
+        self.assertEqual(by_alert, [{"alert": "ops in KL", "portal": "jobstreet-alert", "seen": 2, "ranked": 1, "shortlisted": 1, "applied": 1,
                                      "shortlist_rate_pct": 50.0}])
         self.assertEqual({r["portal"]: r["shortlisted"] for r in by_portal}, {"jobstreet-alert": 1, "hiredly-search": 0})
 

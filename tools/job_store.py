@@ -157,8 +157,11 @@ def yield_report(conn: sqlite3.Connection, by: str, since: str | None, min_score
         where, params = "WHERE first_seen >= ?", [since]
     if by == "alert":
         where = (where + " AND " if where else "WHERE ") + "alert_name IS NOT NULL"
-    for r in conn.execute(f"SELECT {column} AS grp, company, title, status, rank_score FROM jobs {where}", params):
-        g = groups.setdefault(r["grp"] or "(none)", {"seen": 0, "ranked": 0, "shortlisted": 0, "applied": 0})
+    # An alert is per portal: a JobStreet and an Indeed alert can share a name,
+    # and the report exists to decide which of JobStreet's 10 slots to cut.
+    for r in conn.execute(f"SELECT {column} AS grp, portal, company, title, status, rank_score FROM jobs {where}", params):
+        grp = (r["grp"] or "(none)", r["portal"]) if by == "alert" else (r["grp"] or "(none)", None)
+        g = groups.setdefault(grp, {"seen": 0, "ranked": 0, "shortlisted": 0, "applied": 0})
         g["seen"] += 1
         if r["rank_score"] is not None:
             g["ranked"] += 1
@@ -167,8 +170,9 @@ def yield_report(conn: sqlite3.Connection, by: str, since: str | None, min_score
         if (norm(r["company"]), norm(r["title"])) in applied:
             g["applied"] += 1
     rows = []
-    for name, g in groups.items():
-        rows.append({by: name, **g, "shortlist_rate_pct": round(100 * g["shortlisted"] / g["seen"], 1) if g["seen"] else 0.0})
+    for (name, portal), g in groups.items():
+        row = {by: name, "portal": portal} if by == "alert" else {by: name}
+        rows.append({**row, **g, "shortlist_rate_pct": round(100 * g["shortlisted"] / g["seen"], 1) if g["seen"] else 0.0})
     rows.sort(key=lambda r: (r["shortlisted"], r["seen"]), reverse=True)
     return rows
 

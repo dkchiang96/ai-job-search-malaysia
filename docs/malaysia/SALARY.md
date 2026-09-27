@@ -24,8 +24,8 @@ figure and records every assumption it made (`period_assumed`, `estimated`,
 | `Up to RM 8,000` / `Sehingga RM 4,000` | max only | |
 | `From RM 5,000` | min only | |
 | `RM 3,500 sebulan` | monthly | BM period words understood |
-| `RM 10,000 - 15,000 a month (Estimated)` (Indeed) | 10,000-15,000, **estimated** | an estimate never trips a salary floor |
-| `RM 150 per day`, `RM 20 an hour` | parsed, **not converted** | working days vary too much to guess |
+| `RM 10,000 - RM 15,000 a month (Indeed: may be estimated)` | 10,000-15,000, **estimated** | Indeed estimates missing salaries without saying which, so every Indeed alert figure is tagged. An estimate never trips a salary floor |
+| `RM 150 per day`, `RM 20 an hour`, `From RM 1,000 a week` | parsed, **not converted** | working days vary too much to guess |
 | `USD 4,000 - 5,500 per month` | USD, **not converted** | see the fx note below |
 | `Negotiable`, `Competitive`, `Undisclosed` | no figure | never inferred |
 

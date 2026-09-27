@@ -42,6 +42,8 @@ ROBOTS_EXPECTATIONS = [
      "https://my.hiredly.com/jobs-in-kuala-lumpur", 0),
     ("indeed-job-pages", "Indeed Malaysia job pages stay robots-disallowed",
      "https://malaysia.indeed.com/viewjob?jk=0000000000000000", 1),
+    ("indeed-alert-links", "Indeed alert click-through links stay robots-disallowed (why /rank never opens them)",
+     "https://malaysia.indeed.com/rc/clk/dl?jk=0000000000000000", 1),
     ("maukerja-search", "Maukerja job and search paths stay robots-disallowed",
      "https://www.maukerja.my/jobs/operations-manager", 1),
     ("glints-search", "Glints job search stays robots-disallowed",
@@ -123,9 +125,10 @@ def check_parsers() -> dict:
     fx = ROOT / "tools" / "demo_fixtures"
     got = {
         "jobstreet": len(digest_parsers.parse_jobstreet((fx / "jobstreet_digest.txt").read_text(encoding="utf-8"))),
+        "indeed": len(digest_parsers.parse_indeed((fx / "indeed_digest.txt").read_text(encoding="utf-8"))),
         "linkedin": len(digest_parsers.parse_linkedin((fx / "linkedin_digest.txt").read_text(encoding="utf-8"))),
     }
-    ok = got == {"jobstreet": 4, "linkedin": 4}
+    ok = got == {"jobstreet": 4, "indeed": 2, "linkedin": 4}
     return {"check": "digest-parsers", "status": "OK" if ok else "CHANGED",
             "why": "alert parsers still read the recorded layouts (a real-inbox check is /gmail-alerts dry-run)",
             "detail": json.dumps(got)}

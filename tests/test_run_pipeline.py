@@ -42,13 +42,13 @@ class TestDemo(unittest.TestCase):
         self.assertLess(self.elapsed, 30)
 
     def test_cross_source_duplicates_are_merged(self):
-        self.assertIn("4 new, 4 already found by a portal CLI", self.log)
-        self.assertEqual(len(self.seen), 11)
+        self.assertIn("5 new, 5 already found by a portal CLI", self.log)
+        self.assertEqual(len(self.seen), 12)
 
     def test_every_job_ends_ranked_or_parked(self):
         statuses = sorted(e["status"] for e in self.seen.values())
         self.assertEqual(statuses.count("unverified"), 1)
-        self.assertEqual(statuses.count("ranked"), 10)
+        self.assertEqual(statuses.count("ranked"), 11)
 
     def test_gates_fire_with_reasons(self):
         gated = {e["title"]: e["fit_breakdown"]["gate_failed"] for e in self.seen.values()
@@ -65,8 +65,15 @@ class TestDemo(unittest.TestCase):
         self.assertTrue(rows and all(r["Score"] >= 55 for r in rows))
         self.assertTrue((self.out / "email_preview.txt").read_text(encoding="utf-8").startswith("Subject: [jobs]"))
         conn = sqlite3.connect(self.out / "jobs.db")
-        self.assertEqual(conn.execute("SELECT COUNT(*) FROM jobs").fetchone()[0], 11)
+        self.assertEqual(conn.execute("SELECT COUNT(*) FROM jobs").fetchone()[0], 12)
         conn.close()
+
+    def test_indeed_alert_salary_is_marked_estimated_and_never_gates(self):
+        job = next(e for e in self.seen.values() if e["title"] == "Warehouse Operations Lead")
+        self.assertEqual(job["portal"], "indeed-alert")
+        self.assertIn("may be estimated", job["salary"])
+        self.assertEqual(job["alert_name"], "operations in Selangor")
+        self.assertIn("[may be estimated]", self.log)
 
     def test_real_state_is_untouched(self):
         after = REAL_STATE.read_bytes() if REAL_STATE.exists() else None

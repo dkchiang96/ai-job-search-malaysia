@@ -8,21 +8,25 @@ of places it touches his files are listed in
 [UPSTREAM-SYNC.md](UPSTREAM-SYNC.md#files-this-fork-changes).
 
 **In one paragraph:** Malaysia's largest job board, JobStreet, blocks automated
-search in `robots.txt`, and so do Maukerja and Glints. MYFutureJobs needs a
-login, and Jora Malaysia has closed. So this fork adds a search skill for
-**Hiredly** (the board that can be reached properly) and reads
-**JobStreet's own alert emails** from your Gmail instead of scraping it. It
+search in `robots.txt`, and so do Maukerja and Glints. Indeed's Terms ban AI
+agents, MYFutureJobs needs a login, and Jora Malaysia has closed. So this fork
+adds a search skill for **Hiredly** (the board that can be reached properly),
+keeps Mads's **LinkedIn** and **freehire** skills, and reads **JobStreet's and
+Indeed's own alert emails** from your Gmail instead of scraping them (optional,
+and [a script reads them, not the AI](JOB-ALERTS.md#privacy-what-reads-your-email-and-the-alternatives)). It
 understands **RM salaries**, Malaysian location, language (BM/Mandarin) and
 eligibility wording, and can optionally include **remote roles open to
 Malaysia**, with a check that throws out "remote" jobs that are really
 US-only or hybrid.
+
+Every job source, with its limits: [the table in the main README](../../README.md#where-the-malaysia-edition-finds-jobs).
 
 ## What's added
 
 | Module | What it does | Default | Doc |
 |---|---|---|---|
 | `hiredly-search` | Portal skill for my.hiredly.com: state + category search, full job detail. Zero dependencies, contract-compliant, 35 tests. | on | [SKILL.md](../../.agents/skills/hiredly-search/SKILL.md) |
-| `/gmail-alerts` | Reads JobStreet and LinkedIn alert digests over read-only IMAP, parses them deterministically, adds them to `seen_jobs.json`. Indeed parser included but unmaintained. | on (needs Gmail setup) | [JOB-ALERTS.md](JOB-ALERTS.md) |
+| `/gmail-alerts` | Reads JobStreet, Indeed and LinkedIn alert digests over read-only IMAP, parses them deterministically, adds them to `seen_jobs.json`. | on (needs Gmail setup; optional) | [JOB-ALERTS.md](JOB-ALERTS.md) |
 | Remote roles | Remote OK, We Work Remotely, Working Nomads skills, plus the **Remote-Work Verification Gate** | **off**; `/setup-malaysia` asks | [REMOTE.md](REMOTE.md) |
 | Malaysia rules | `12-malaysia-market.md`: RM salary conventions, BM/Mandarin requirement phrasing, "Malaysian only" wording, Klang Valley, agency duplicates | on after `/setup-malaysia` | [12-malaysia-market.md](../../.claude/skills/job-application-assistant/12-malaysia-market.md) |
 | `tools/myr_salary.py` | Normalises any Malaysian pay text to monthly RM, recording every assumption | on | [SALARY.md](SALARY.md) |
@@ -75,6 +79,7 @@ all invented data, with no network and no credentials.
   robots-disallowed. See its SKILL.md.
 - **Metered or credentialed parts ship off:** Gmail (app password), Notion
   (token) and scheduled runs do nothing until you set them up yourself.
+  Gmail access can be a separate account used only for job alerts, or skipped.
 - **No application automation.** Discovery and drafting only. The one
   outbound email is a run summary sent to your own address.
 - **Upstream tracking:** merges upstream monthly

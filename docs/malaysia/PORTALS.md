@@ -1,7 +1,7 @@
 # Malaysian job portals: what can be automated, and how this fork reaches each
 
 Checked **2026-09-24** against each site's live `robots.txt` (and terms of use
-where it mattered). Re-check monthly with `python3 tools/malaysia_health.py`.
+where it mattered). Indeed re-checked 2026-09-27. Re-check monthly with `python3 tools/malaysia_health.py`.
 Every decision below is re-verified there.
 
 The rule this fork follows is the one upstream follows: **a path
@@ -14,7 +14,7 @@ site offers you instead (its own email alerts), or leaves it to you.
 | **JobStreet** (my.jobstreet.com) | `Disallow: */job/` for everyone. Query-string URLs are disallowed except `?keywords` searches. `/api/jobsearch/` and `/graphql` are disallowed. AI crawlers (`anthropic-ai`, `GPTBot`, ...) are named and blocked from job pages. | **Email alerts via `/gmail-alerts`.** Save searches on JobStreet, and it emails you matches. No request ever reaches JobStreet. Job pages are never fetched; `/rank` finds the employer's own posting instead. |
 | **Hiredly** (my.hiredly.com) | No rules for general agents on `my.hiredly.com`; category/state pages are in its sitemaps. **`my-api.hiredly.com` (the search API) is `Disallow: /`.** Terms §3.1: personal, non-commercial use. | **`hiredly-search`** portal skill, `my.hiredly.com` pages only. Keyword filtering happens locally because the API is off-limits. Personal use, low volume. |
 | **LinkedIn** | (upstream's `linkedin-search` skill, unchanged) | `linkedin-search` with a Malaysian location, plus optional LinkedIn alert emails via `/gmail-alerts`. |
-| **Indeed Malaysia** | `/viewjob` (job pages) and `/rc/` (click-through) are disallowed; the search page is not. | Alert emails via `/gmail-alerts` (**opt-in, unmaintained**). No CLI: a search that can't open any posting isn't worth building. |
+| **Indeed Malaysia** | `/viewjob` (job pages), `/rc/` and `/pagead/` (click-through) are disallowed; the search page is not. But the **Terms** ban "any automated system (bots, scrapers, spiders, AI or Agentic AI)" without written permission, and a plain request to search returns 403. | **Email alerts via `/gmail-alerts`**, on by default. Parser checked 2026-09-27 against 315 real alert emails (4,387 jobs, none malformed). Salaries are tagged "may be estimated" because Indeed estimates missing ones without saying which. No CLI. |
 | **Maukerja** / **Ricebowl** (same group) | `/jobs/`, `/search/*`, `/job/read/`, `/api/*` disallowed. | Not automated. Check by hand, or add their alert emails (see `email-alert-portals.md`, "Adding another portal"). |
 | **Glints** | `*/opportunities/jobs/explore?*` (search) disallowed. | Not automated. Individual job pages are allowed, so `/rank` may read a Glints copy of a job it found elsewhere, after `robots_check.py`. |
 | **MYFutureJobs** (PERKESO) | The public site is WordPress. Job data lives in `candidates.myfuturejobs.gov.my`, where every job API call returns **HTTP 401 without a login**. | Not automated, since a script won't log in on your behalf. Use it directly, especially if you're claiming EIS. |
@@ -25,9 +25,10 @@ site offers you instead (its own email alerts), or leaves it to you.
 | **We Work Remotely** | Allowed except account/admin paths. | `weworkremotely-search`, off unless remote. |
 | **Working Nomads** | Allows everything (empty `Disallow:`). | `workingnomads-search`, off unless remote. |
 
-## Why not just scrape JobStreet anyway?
+## Why not just scrape JobStreet (or Indeed) anyway?
 
-Because its robots.txt says not to, and names AI crawlers specifically. The
+Because JobStreet's robots.txt says not to and names AI crawlers specifically,
+and Indeed's Terms ban AI agents by name. The
 alert emails carry the same fields a search result would (title, company,
 location, salary when stated, link), and they cost nothing. What they don't
 carry is the full job description. `/rank` handles that honestly: it looks for

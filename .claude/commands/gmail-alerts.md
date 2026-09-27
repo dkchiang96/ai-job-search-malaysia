@@ -1,14 +1,15 @@
 # /gmail-alerts - Job Discovery via Portal Email Alerts (Malaysia)
 
-Adds the job listings from your **JobStreet** and **LinkedIn** alert emails
-(and, opt-in, **Indeed**) to the same `job_scraper/seen_jobs.json` that `/scrape`
-fills, so `/rank` and `/apply` treat them like any other job.
+Adds the job listings from your **JobStreet**, **Indeed** and **LinkedIn** alert
+emails to the same `job_scraper/seen_jobs.json` that `/scrape` fills, so `/rank`
+and `/apply` treat them like any other job.
 
 **Why email:** JobStreet is Malaysia's largest job board, and its `robots.txt`
 disallows automated access to its job pages and query-string searches (AI
-crawlers are named explicitly). No `jobstreet-search` CLI can be built without
-ignoring that. JobStreet *does* let you save a search on its own site and emails
-you new matches. Reading your own inbox never touches JobStreet's servers.
+crawlers are named explicitly). Indeed's Terms ban bots and AI agents from the
+site outright. No `jobstreet-search` or `indeed-search` CLI can be built without
+ignoring that. Both *do* let you save a search on their own site and email you
+new matches. Reading your own inbox never touches their servers.
 Background and setup: `docs/malaysia/JOB-ALERTS.md`.
 
 **Everything deterministic runs outside model context.**
@@ -23,8 +24,9 @@ email body, only the script's compact JSON summary.
 
 Nothing to check up front. The script reports its own missing setup. If Step 2
 returns an `error` naming `GMAIL_IMAP_USER` / `GMAIL_IMAP_APP_PASSWORD`, stop and
-point the user at `docs/malaysia/JOB-ALERTS.md` ("Connect Gmail", about 5
-minutes). **Never ask for the app password in chat and never write it
+point the user at `docs/malaysia/JOB-ALERTS.md` (Part 3, about 5 minutes).
+If they're unsure about connecting email, point them at that doc's "Privacy"
+section: a separate Gmail just for alerts, or skipping this, are both fine. **Never ask for the app password in chat and never write it
 anywhere yourself.** The user puts it in `gmail_alerts/.env`, which is
 gitignored.
 
@@ -75,6 +77,10 @@ redirects:
 - **JobStreet** links resolve to `my.jobstreet.com/job/...`, which
   `robots.txt` disallows. Never fetch them, never rewrite them into a
   JobStreet API call. They are for the user to click.
+- **Indeed** links (`malaysia.indeed.com/rc/clk/...`, `/pagead/clk/...`,
+  `engage.indeed.com/...`) redirect to robots-disallowed job pages, and Indeed's
+  Terms bar AI agents. Never fetch them or rebuild a `viewjob` URL. Treat an
+  Indeed salary as possibly Indeed's estimate; it's stored tagged as such.
 - **LinkedIn** links are stored in the `my.linkedin.com/jobs/view/<id>` form.
   `linkedin-search detail <id>` is the supported way to read one, and it is
   `/rank`'s job, not this command's.
@@ -106,8 +112,8 @@ pending mailbox setup: <portal>, <portal>
 Omit the `pending mailbox setup:` line when every portal has its label. Then:
 
 - If 8 or more new jobs were stored, suggest `/rank`. It finds and reads the full
-  posting for each job (for JobStreet jobs, on the employer's own site or a
-  mirror; see `rank.md` Step 2) before scoring.
+  posting for each job (for JobStreet and Indeed jobs, on the employer's own
+  site or a mirror; see `rank.md` Step 2) before scoring.
 - Once a month, suggest `python3 tools/job_store.py yield --by alert` (optional
   SQLite mirror). It shows which JobStreet saved searches actually produce
   shortlisted jobs, which matters because JobStreet allows only 10.
@@ -120,8 +126,8 @@ Omit the `pending mailbox setup:` line when every portal has its label. Then:
    `BODY.PEEK`, so mail is never marked read, moved, labelled or deleted.
 2. **Never fabricate a listing.** A digest block either matches its documented
    shape or yields nothing. No model step fills gaps with guesses.
-3. **Never fetch a JobStreet job page**, directly, via redirect, or via any
-   JobStreet endpoint. This rule is why the email path exists.
+3. **Never fetch a JobStreet or Indeed job page**, directly, via redirect, or
+   via any of their endpoints. This rule is why the email path exists.
 4. **Credentials never enter model context.** The app password lives in
    `gmail_alerts/.env` or the environment, is read by the script only, and is
    never echoed, requested in chat, or written by you.

@@ -22,6 +22,7 @@ terms (full table: [PORTALS.md](PORTALS.md)):
 
 - **JobStreet**, the largest, disallows job pages for every crawler and names
   AI crawlers explicitly.
+- **Indeed**'s Terms ban "bots, scrapers, spiders, AI or Agentic AI".
 - **Maukerja** and **Glints** disallow their search paths.
 - **MYFutureJobs** requires a login for all job data.
 - **Jora Malaysia** has shut down.
@@ -32,14 +33,20 @@ get the same information through channels the portals themselves offer.
 
 ## What I built
 
-**1. JobStreet through its own alert emails.** JobStreet lets you save a search
-and emails you matches. A read-only IMAP importer takes those digests from a
+**1. JobStreet and Indeed through their own alert emails.** Both let you save a
+search and email you matches. A read-only IMAP importer takes those digests from a
 Gmail label, and a deterministic parser (not an LLM) extracts title, company,
 location, salary and link. The parser was built against real digests,
 including the traps a naive parser falls into: blank lines that mean
 different things in different places, a promo block in the middle of the
 listings, and a "jobs you may have missed" section that looks like footer but
 is real content. The model never sees an email. It sees a 5-field summary.
+The Indeed parser was checked against every Indeed alert in a real inbox over
+six months (315 emails, 4,387 jobs, none malformed). That check found the old
+parser silently dropping the first job in every email, and Indeed filling in
+estimated salaries without saying which, so every Indeed figure is tagged and
+never used to rule a job out. For anyone uneasy about connecting email, the
+docs offer a separate alerts-only Gmail, or skipping it altogether.
 
 **2. A Hiredly portal skill that stays inside the rules.** The site's keyword
 search runs through an API that robots.txt disallows, so the skill uses only
@@ -101,7 +108,7 @@ cheaper, testable, and honest about uncertainty.
 - **Upstream's safety guards extended, not bypassed.** Every new
   pre-approved command went into upstream's security allowlist in the same
   change.
-- **Tests.** 79 new Python tests on top of upstream's 484, plus 92 CLI tests
+- **Tests.** 89 new Python tests on top of upstream's 484, plus 92 CLI tests
   across the four portal skills. An offline demo runs the real pipeline code
   on invented data in about a second.
 - **Maintenance planned for.** A monthly routine merges upstream, and a

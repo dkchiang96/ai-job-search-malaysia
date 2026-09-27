@@ -180,9 +180,9 @@ class TestFetchPortal(unittest.TestCase):
 
 
 class TestConfig(unittest.TestCase):
-    def test_defaults_exclude_unmaintained_indeed(self):
+    def test_defaults_cover_all_three_alert_portals(self):
         self.assertEqual(g.load_portals(Path("does-not-exist.json")), g.DEFAULT_PORTALS)
-        self.assertNotIn("indeed", g.DEFAULT_PORTALS)
+        self.assertEqual(set(g.DEFAULT_PORTALS), {"jobstreet", "linkedin", "indeed"})
 
     def test_unknown_portal_in_config_is_rejected(self):
         with tempfile.TemporaryDirectory() as d:
