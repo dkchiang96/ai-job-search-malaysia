@@ -68,8 +68,9 @@ all invented data, with no network and no credentials.
 
 ## Honest scoping (what Mads's index asks every fork to state)
 
-- **Licence and attribution:** MIT, Mads Lorentzen's copyright intact (see
-  [LICENSE](../../LICENSE)).
+- **Licence and attribution:** MIT. [LICENSE](../../LICENSE) is Mads
+  Lorentzen's, unchanged. The Malaysia adaptation is © 2026 Derrick Chiang,
+  under the same licence.
 - **Personal use:** `hiredly-search` is for personal, non-commercial use under
   Hiredly's Terms §3.1. Remote OK's API asks for a link back and attribution
   if you publish anything from it.
@@ -81,6 +82,16 @@ all invented data, with no network and no credentials.
   Gmail access can be a separate account used only for job alerts, or skipped.
 - **No application automation.** Discovery and drafting only. The one
   outbound email is a run summary sent to your own address.
+- **Network:** job searches reach only the sources in the
+  [main README's table](../../README.md#where-the-malaysia-edition-finds-jobs),
+  plus your own Gmail (read-only) and, if you opt in, Notion and your own
+  SMTP. Separately, the monthly health check (`tools/malaysia_health.py`, run
+  by hand) also contacts **Jora, MYFutureJobs, Maukerja and Glints**. These
+  are **not job sources**: this fork never searches them or reads their
+  listings. The check only reads their `robots.txt` (and, for MYFutureJobs,
+  sends one request that should be refused without a login) to confirm they are
+  still closed or off-limits. It also re-checks the robots rules of JobStreet
+  and Indeed. Reasons per site: [PORTALS.md](PORTALS.md).
 - **Upstream tracking:** merges upstream monthly
   ([routine](UPSTREAM-SYNC.md)). Last synced with upstream commit `120f476`
   (2026-09-21).

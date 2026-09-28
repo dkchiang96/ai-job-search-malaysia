@@ -24,7 +24,7 @@ An AI-powered job application framework built on [Claude Code](https://claude.co
 > - **RM salaries:** RM pay-text parsing, plus Malaysian location, language (BM/Mandarin) and eligibility rules.
 > - **Optional extras, all off by default:** your own Word resume edited in place, a Fit Model scorer you configure at setup, a job-history database, and `/jobs` scheduled runs with Notion and an email summary.
 >
-> **Start here:** run `python3 tools/run_pipeline.py --demo` (offline, about a second), then `/setup` → `/setup-malaysia`. Full notes: [docs/malaysia/](docs/malaysia/README.md). **Tracking:** merges upstream monthly ([routine](docs/malaysia/UPSTREAM-SYNC.md)). Maintained by [@dkchiang96](https://github.com/dkchiang96).
+> **Start here:** run `python3 tools/run_pipeline.py --demo` (offline, about a second), then `/setup` → `/setup-malaysia`. Full notes: [docs/malaysia/](docs/malaysia/README.md). **Tracking:** merges upstream monthly ([routine](docs/malaysia/UPSTREAM-SYNC.md)). Maintained by [@dkchiang96](https://github.com/dkchiang96). Malaysia adaptation © 2026 Derrick Chiang, under the same MIT licence as Mads's work ([LICENSE](LICENSE)).
 
 ### Where the Malaysia edition finds jobs
 
@@ -37,7 +37,7 @@ An AI-powered job application framework built on [Claude Code](https://claude.co
 | **Indeed** | Your Indeed alert emails, read by `/gmail-alerts` | on once Gmail is connected | Indeed's Terms ban bots and AI agents, and its search refuses scripts. Same limits as JobStreet, and Indeed fills in **estimated salaries** without saying which, so every Indeed salary is tagged "may be estimated" and never used to rule a job out. |
 | **Remote OK, We Work Remotely, Working Nomads** | Three remote-only board skills (new) | off; `/setup-malaysia` asks | Remote roles only. Every "remote" job must pass a check that drops ones that are really US-only or hybrid, and flags awkward time-zone overlap. Remote OK asks for a link back if you publish its listings. |
 
-The full reasoning, with each site's rules quoted, is in [PORTALS.md](docs/malaysia/PORTALS.md).
+The full reasoning, with each site's rules quoted, is in [PORTALS.md](docs/malaysia/PORTALS.md). **Not job sources:** Jora, MYFutureJobs, Maukerja and Glints are never searched. The optional monthly health check only reads their `robots.txt` (plus one login-required probe of MYFutureJobs) to confirm they are still closed or off-limits.
 
 #### Who reads your email
 

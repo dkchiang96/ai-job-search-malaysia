@@ -75,6 +75,10 @@ to find and re-insert.
 | `templates/README.md` | the "Two authoring models" section |
 | `tools/robots_check.py` | `encoding='utf-8'` in `_fetch` (fixes a Windows crash on non-Latin robots.txt bytes) |
 
+Keep `LICENSE` **verbatim**: any added line makes GitHub report the licence as
+"NOASSERTION". Attribution for the Malaysia adaptation lives in the README box
+and `docs/malaysia/README.md` instead.
+
 Everything else in this fork is a **new file** and can't conflict:
 `.agents/skills/{hiredly,remoteok,weworkremotely,workingnomads}-search/`,
 `.claude/commands/{gmail-alerts,setup-malaysia,jobs}.md`,
