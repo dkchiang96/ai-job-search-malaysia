@@ -93,7 +93,7 @@ all invented data, with no network and no credentials.
   still closed or off-limits. It also re-checks the robots rules of JobStreet
   and Indeed. Reasons per site: [PORTALS.md](PORTALS.md).
 - **Upstream tracking:** merges upstream monthly
-  ([routine](UPSTREAM-SYNC.md)). Last synced with upstream commit `120f476`
-  (2026-09-21).
+  ([routine](UPSTREAM-SYNC.md)). Last synced with upstream commit `83c788d`
+  (2026-10-30).
 - **Built by** Derrick Chiang ([@dkchiang96](https://github.com/dkchiang96)),
   using Claude Code. Why and how: [CASE-STUDY.md](CASE-STUDY.md).
