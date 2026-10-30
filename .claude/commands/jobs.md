@@ -43,6 +43,8 @@ JobStreet or Indeed page). Skip rank.md's closing question.
 
 ## Step 4: History Mirror (only if you opted in)
 
+> **Windows:** run these tools as `python`, not `python3`. A python.org install ships no `python3`, so that name reaches the Microsoft Store alias, which either exits 49 with no output (#669) or starts a separate Store Python without the packages `pip` installed (such as pypdf). `.claude/settings.json` allows both spellings.
+
 If `job_scraper/jobs.db` exists: `python3 tools/job_store.py sync`. Otherwise
 skip silently.
 

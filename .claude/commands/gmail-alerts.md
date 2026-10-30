@@ -40,6 +40,8 @@ gitignored.
 
 ## Step 2: Fetch, Parse, Store
 
+> **Windows:** run these tools as `python`, not `python3`. A python.org install ships no `python3`, so that name reaches the Microsoft Store alias, which either exits 49 with no output (#669) or starts a separate Store Python without the packages `pip` installed (such as pypdf). `.claude/settings.json` allows both spellings.
+
 ```bash
 python3 tools/gmail_imap_fetch.py run [--portal <name>] [--since <YYYY-MM-DD>] [--dry-run]
 ```
